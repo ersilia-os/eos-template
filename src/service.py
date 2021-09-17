@@ -45,7 +45,7 @@ class Model(object):
         pred_file = os.path.join(tmp_folder, self.PRED_FILE)
         log_file = os.path.join(tmp_folder, self.LOG_FILE)
         with open(data_file, "w") as f:
-            f.write("smiles")
+            f.write("smiles"+os.linesep)
             for smiles in smiles_list:
                 f.write(smiles + os.linesep)
         run_file = os.path.join(tmp_folder, self.RUN_FILE)
