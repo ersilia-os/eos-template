@@ -70,12 +70,12 @@ class Model(object):
             R = []
             for r in reader:
                 R += [{"embedding": [float(x) for x in r]}]
-        schema = {
+        meta = {
             "embedding": h
         }
         result = {
             'result': R,
-            'schema': schema
+            'meta': meta
         }
         return result
 
