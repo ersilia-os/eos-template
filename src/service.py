@@ -70,7 +70,14 @@ class Model(object):
             R = []
             for r in reader:
                 R += [{"embedding": [float(x) for x in r]}]
-        return R
+        schema = {
+            "embedding": h
+        }
+        result = {
+            'result': R,
+            'schema': schema
+        }
+        return result
 
 
 class Artifact(BentoServiceArtifact):
