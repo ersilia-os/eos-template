@@ -21,12 +21,17 @@ def load_model(framework_dir, checkpoints_dir):
     mdl.load(framework_dir, checkpoints_dir)
     return mdl
 
+def Float(x):
+    try:
+        return float(x)
+    except:
+        return None
 
 class Model(object):
     def __init__(self):
-        self.DATA_FILE = "data.csv"
-        self.PRED_FILE = "pred.csv"
-        self.RUN_FILE = "run.sh"
+        self.DATA_FILE = "_data.csv"
+        self.PRED_FILE = "_pred.csv"
+        self.RUN_FILE = "_run.sh"
         self.LOG_FILE = "run.log"
 
     def load(self, framework_dir, checkpoints_dir):
@@ -39,7 +44,7 @@ class Model(object):
     def set_framework_dir(self, dest):
         self.framework_dir = os.path.abspath(dest)
 
-    def predict(self, smiles_list):
+    def predict(self, smiles_list): # EDIT: rename if model does not do predictions (e.g. it does calculations)
         tmp_folder = tempfile.mkdtemp()
         data_file = os.path.join(tmp_folder, self.DATA_FILE)
         pred_file = os.path.join(tmp_folder, self.PRED_FILE)
@@ -69,9 +74,9 @@ class Model(object):
             h = next(reader)
             R = []
             for r in reader:
-                R += [{"embedding": [float(x) for x in r]}]
+                R += [{"values": [Float(x) for x in r]}]
         meta = {
-            "embedding": h
+            "values": h
         }
         result = {
             'result': R,
@@ -130,8 +135,8 @@ class Artifact(BentoServiceArtifact):
 @artifacts([Artifact("model")])
 class Service(BentoService):
     @api(input=JsonInput(), batch=True)
-    def predict(self, input: List[JsonSerializable]):
+    def predict(self, input: List[JsonSerializable]): # EDIT: rename if necessary 
         input = input[0]
         smiles_list = [inp["input"] for inp in input]
-        output = self.artifacts.model.predict(smiles_list)
+        output = self.artifacts.model.predict(smiles_list) # EDIT: rename if necessary
         return [output]
