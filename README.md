@@ -4,7 +4,7 @@
 - Ersilia ID: 
 - Tags: 
 
-# Model Description
+# Model description
 Short description of the model in one or two sentences.
 - Input:
 - Output: {unit and description of output) 
