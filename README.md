@@ -1,11 +1,8 @@
-# eos-template
-Template repository to add new models to the Ersilia Model Hub
-
 # Model title
 ## Model identifiers
-- slug: (one word reference for the model)
+- Slug:
 - Ersilia ID: 
-- tags: 
+- Tags: 
 
 # Model Description
 Short description of the model in one or two sentences.
@@ -25,32 +22,3 @@ State the licences used which are GPL v3 license used by Ersilia and the license
 
 # History 
 - State the date when the model was downloaded and incorporated into Ersilia.
-
-As an example, check out the [Avalon model](https://github.com/ersilia-os/eos8h6g) to see how this template was applied.
-=======
-# model title
-
-# Overview
-<model description>
-  **Input**:
-  **Output**:
-  **Training data**:
-  **Experimental validation**:
-  
-# Source Code 
-  <scientific publication>
-  <link to source code>
-    
-# Specifications 
-  <status>
-  <tags>
-  
-# History
-  <model download date>
-  <model incorporation date>
-    
-# License and copyright notice 
-  <original licence of the source code and GPLv3 licence>
-  
-
-
