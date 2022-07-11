@@ -30,7 +30,7 @@ def Float(x):
 class Model(object):
     def __init__(self):
         self.DATA_FILE = "_data.csv"
-        self.PRED_FILE = "_pred.csv"
+        self.OUTPUT_FILE = "_output.csv"
         self.RUN_FILE = "_run.sh"
         self.LOG_FILE = "run.log"
 
@@ -45,9 +45,9 @@ class Model(object):
         self.framework_dir = os.path.abspath(dest)
 
     def predict(self, smiles_list): # <-- EDIT: rename if model does not do predictions (e.g. it does calculations)
-        tmp_folder = tempfile.mkdtemp()
+        tmp_folder = tempfile.mkdtemp(prefix="ersilia-")
         data_file = os.path.join(tmp_folder, self.DATA_FILE)
-        pred_file = os.path.join(tmp_folder, self.PRED_FILE)
+        output_file = os.path.join(tmp_folder, self.OUTPUT_FILE)
         log_file = os.path.join(tmp_folder, self.LOG_FILE)
         with open(data_file, "w") as f:
             f.write("smiles"+os.linesep)
@@ -56,10 +56,10 @@ class Model(object):
         run_file = os.path.join(tmp_folder, self.RUN_FILE)
         with open(run_file, "w") as f:
             lines = [
-                "bash {0}/run.sh {1} {2}".format( # <-- EDIT: Add more run lines if necessary.
+                "bash {0}/run_predict.sh {1} {2}".format( # <-- EDIT: match method name (run_predict.sh, run_calculate.sh, etc.)
                     self.framework_dir,
                     data_file,
-                    pred_file
+                    output_file
                 )
             ]
             f.write(os.linesep.join(lines))
@@ -68,18 +68,18 @@ class Model(object):
             subprocess.Popen(
                 cmd, stdout=fp, stderr=fp, shell=True, env=os.environ
             ).wait()
-        with open(pred_file, "r") as f:
+        with open(output_file, "r") as f:
             reader = csv.reader(f)
             h = next(reader)
             R = []
             for r in reader:
-                R += [{"values": [Float(x) for x in r]}] # <-- EDIT: Modify according to type of output
+                R += [{"outcome": [Float(x) for x in r]}] # <-- EDIT: Modify according to type of output
         meta = {
-            "values": h
+            "outcome": h
         }
         result = {
-            'result': R,
-            'meta': meta
+            "result": R,
+            "meta": meta
         }
         return result
 
