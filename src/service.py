@@ -52,7 +52,7 @@ class Model(object):
         with open(data_file, "w") as f:
             f.write("smiles"+os.linesep)
             for smiles in smiles_list:
-                f.write(smiles + os.linesep)
+                f.write(smiles+os.linesep)
         run_file = os.path.join(tmp_folder, self.RUN_FILE)
         with open(run_file, "w") as f:
             lines = [
