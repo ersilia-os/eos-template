@@ -33,8 +33,8 @@ with open(input_file, "r") as f:
 outputs = my_model(smiles_list, ckpt)
 
 # write output in a .csv file
-with open(output_file, "r") as f:
+with open(output_file, "w") as f:
     writer = csv.writer(f)
-    writer.writerow(["counts"]) # header
+    writer.writerow(["value"]) # header
     for o in outputs:
         writer.writerow([o])
