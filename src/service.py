@@ -26,6 +26,21 @@ def Float(x):
         return float(x)
     except:
         return None
+    
+def String(x):
+    x = str(x)
+    if not x:
+        return None
+    if x == "nan":
+        return None
+    if x == "null":
+        return None
+    if x == "False":
+        return None
+    if x == "None":
+        return None
+    return x
+
 
 class Model(object):
     def __init__(self):
@@ -56,7 +71,7 @@ class Model(object):
         run_file = os.path.join(tmp_folder, self.RUN_FILE)
         with open(run_file, "w") as f:
             lines = [
-                "bash {0}/run_predict.sh {1} {2}".format( # <-- EDIT: match method name (run_predict.sh, run_calculate.sh, etc.)
+                "bash {0}/run_predict.sh {0} {1} {2}".format( # <-- EDIT: match method name (run_predict.sh, run_calculate.sh, etc.)
                     self.framework_dir,
                     data_file,
                     output_file
@@ -73,7 +88,7 @@ class Model(object):
             h = next(reader)
             R = []
             for r in reader:
-                R += [{"outcome": [Float(x) for x in r]}] # <-- EDIT: Modify according to type of output
+                R += [{"outcome": [Float(x) for x in r]}] # <-- EDIT: Modify according to type of output (Float, String...)
         meta = {
             "outcome": h
         }
