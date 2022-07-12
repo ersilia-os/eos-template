@@ -60,7 +60,7 @@ class Model(object):
         self.framework_dir = os.path.abspath(dest)
 
     def predict(self, smiles_list): # <-- EDIT: rename if model does not do predictions (e.g. it does calculations)
-        tmp_folder = tempfile.mkdtemp(prefix="ersilia-")
+        tmp_folder = tempfile.mkdtemp(prefix="eos-")
         data_file = os.path.join(tmp_folder, self.DATA_FILE)
         output_file = os.path.join(tmp_folder, self.OUTPUT_FILE)
         log_file = os.path.join(tmp_folder, self.LOG_FILE)
@@ -96,6 +96,7 @@ class Model(object):
             "result": R,
             "meta": meta
         }
+        shutil.rmtree(tmp_folder)
         return result
 
 
