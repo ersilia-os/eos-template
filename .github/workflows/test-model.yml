@@ -47,5 +47,6 @@ jobs:
       - name: Upload log output
         uses: actions/upload-artifact@v3
         with:
-          name: ersilia-predict-logs
+          name: debug-logs
+          retention-days: 1
           path: /home/runner/eos/console.log
