@@ -1,0 +1,52 @@
+name: Model Test
+on:
+  pull_request:
+    types: [opened, reopened] 
+  push: 
+    branches: ['main']
+  
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - env:
+          MODEL_ID: ${{ github.event.repository.name }}
+      - uses: actions/checkout@755da8c3cf115ac066823e79a1e1788f8940201b # pin@v3.2
+
+      - name: Add conda to system path
+        run: echo $CONDA/bin >> $GITHUB_PATH
+
+      - name: Source conda
+        run: source $CONDA/etc/profile.d/conda.sh
+
+      - name: Install dependencies
+        run: |
+          source activate
+          conda init
+          conda install git-lfs -c conda-forge
+          git-lfs install
+          conda install gh -c conda-forge
+      - name: Install ersilia
+        run: |
+          source activate
+          python --version
+          echo "After conda init"
+          conda init
+          python -m pip install -e .[test]
+  
+      - name: Predict output
+        run: |
+          source activate
+          echo "Sample model id selected: $MODEL_ID"
+          ersilia -v fetch $MODEL_ID
+          ersilia -v serve $MODEL_ID
+          ersilia sample -n 5 -f input.csv
+          ersilia -v api -i input.csv
+          ersilia close
+          
+      - name: Upload log output
+        uses: actions/upload-artifact@83fd05a356d7e2593de66fc9913b3002723633cb #pin v3.1.1
+        with:
+          name: debug-logs
+          retention-days: 1
+          path: /home/runner/eos/console.log
