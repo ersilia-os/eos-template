@@ -1,7 +1,17 @@
 {
-    "model_name": "",
-    "short_description": "",
-    "slug": "",
-    "esrilia-id": "",
-    "tags": []
+    "Identifier": "",
+    "Slug": "",
+    "Status": "",
+    "Title": "",
+    "Description": "",
+    "Input": "",
+    "Input Shape": "",
+    "Output": [],
+    "Mode": "",
+    "Tag": [],
+    "Publication": "",
+    "Source": "",
+    "License": "",
+    "Api": ""
+    "Model Checkpoints": "",
 }
