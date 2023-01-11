@@ -31,7 +31,7 @@ jobs:
           python --version
           echo "After conda init"
           conda init
-          python -m pip install -e .[test]
+          python -m pip install ersilia
   
       - name: Predict output
         env:
@@ -39,7 +39,7 @@ jobs:
         run: |
           source activate
           echo "Sample model id selected: $MODEL_ID"
-          ersilia -v fetch $MODEL_ID
+          ersilia -v fetch $MODEL_ID 
           ersilia -v serve $MODEL_ID
           ersilia sample -n 5 -f input.csv
           ersilia -v api -i input.csv
