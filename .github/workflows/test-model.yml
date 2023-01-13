@@ -31,7 +31,7 @@ jobs:
           python --version
           echo "After conda init"
           conda init
-          python -m pip install ersilia
+          python -m pip install git+https://github.com/ersilia-os/ersilia.git
   
       - name: Predict output
         env:
