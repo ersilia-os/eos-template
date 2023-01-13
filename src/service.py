@@ -59,15 +59,15 @@ class Model(object):
     def set_framework_dir(self, dest):
         self.framework_dir = os.path.abspath(dest)
 
-    def run(self, smiles_list):
+    def run(self, input_list):
         tmp_folder = tempfile.mkdtemp(prefix="eos-")
         data_file = os.path.join(tmp_folder, self.DATA_FILE)
         output_file = os.path.join(tmp_folder, self.OUTPUT_FILE)
         log_file = os.path.join(tmp_folder, self.LOG_FILE)
         with open(data_file, "w") as f:
-            f.write("smiles"+os.linesep)
-            for smiles in smiles_list:
-                f.write(smiles+os.linesep)
+            f.write("input"+os.linesep)
+            for inp in input_list:
+                f.write(inp+os.linesep)
         run_file = os.path.join(tmp_folder, self.RUN_FILE)
         with open(run_file, "w") as f:
             lines = [
@@ -152,6 +152,6 @@ class Service(BentoService):
     @api(input=JsonInput(), batch=True)
     def run(self, input: List[JsonSerializable]):
         input = input[0]
-        smiles_list = [inp["input"] for inp in input]
-        output = self.artifacts.model.run(smiles_list)
+        input_list = [inp["input"] for inp in input]
+        output = self.artifacts.model.run(input_list)
         return [output]
