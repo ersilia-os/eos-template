@@ -42,6 +42,9 @@ jobs:
         run: |
           source activate
           echo "Updating metadata to AirTable looking at owner: $USER_NAME"
+          echo "The repo is: $REPO_NAME"
+          echo "The branch is: $BRANCH"
+          echo "The API key is: ***"
           wget https://raw.githubusercontent.com/ersilia-os/ersilia/master/.github/scripts/update_metadata_to_airtable.py
           python3 update_metadata_to_airtable.py "$USER_NAME" "$REPO_NAME" "$BRANCH" "$AIRTABLE_API_KEY"
 
