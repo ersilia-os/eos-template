@@ -16,13 +16,6 @@ jobs:
       - name: Source conda
         run: source $CONDA/etc/profile.d/conda.sh
 
-      - name: Check repository owner
-        id: check-repository-owner
-        env:
-          USER_NAME: ${{ github.repository_owner }}
-        run: |
-          echo "This is the repository owner: $USER_NAME"
-
       - name: Install dependencies
         run: |
           source activate
@@ -44,7 +37,7 @@ jobs:
         env:
           USER_NAME: ${{ github.repository_owner }}
           BRANCH: "main"
-          REPO_NAME: ${{ steps.create-model-repo.outputs.repo_name }}
+          REPO_NAME: ${{ github.event.repository.name }}
           AIRTABLE_API_KEY: ${{ secrets.AIRTABLE_API_KEY }}
         run: |
           source activate
