@@ -42,7 +42,7 @@ jobs:
         run: |
           source activate
           wget https://raw.githubusercontent.com/ersilia-os/ersilia/master/.github/scripts/update_metadata_to_airtable.py
-          python3 update_metadata_to_airtable.py $USER_NAME $REPO_NAME "$BRANCH $AIRTABLE_API_KEY
+          python3 update_metadata_to_airtable.py $USER_NAME $REPO_NAME $BRANCH $AIRTABLE_API_KEY
 
       - name: Predict output
         env:
