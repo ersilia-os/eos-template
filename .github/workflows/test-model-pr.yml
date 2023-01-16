@@ -15,14 +15,7 @@ jobs:
       
       - name: Source conda
         run: source $CONDA/etc/profile.d/conda.sh
-
-      - name: Check repository owner
-        id: check-repository-owner
-        env:
-          USER_NAME: ${{ github.event.pull_request.head.repo.owner.login }}
-        run: |
-          echo "This is the repository owner: $USER_NAME"
-
+        
       - name: Install dependencies
         run: |
           source activate
@@ -50,7 +43,7 @@ jobs:
           source activate
           echo "Updating metadata to AirTable looking at owner: $USER_NAME"
           wget https://raw.githubusercontent.com/ersilia-os/ersilia/master/.github/scripts/update_metadata_to_airtable.py
-          python3 update_metadata_to_airtable.py $USER_NAME $REPO_NAME $BRANCH $AIRTABLE_API_KEY
+          python3 update_metadata_to_airtable.py "$USER_NAME" "$REPO_NAME" "$BRANCH" "$AIRTABLE_API_KEY"
 
       - name: Predict output
         env:
