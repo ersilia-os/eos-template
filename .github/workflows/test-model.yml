@@ -18,6 +18,13 @@ jobs:
       - name: Source conda
         run: source $CONDA/etc/profile.d/conda.sh
 
+      - name: Check repository owner
+        id: check-repository-owner
+        env:
+          USER_NAME: ${{ github.repository_owner }}
+        run: |
+          echo "This is the repository owner: $USER_NAME"
+
       - name: Install dependencies
         run: |
           source activate
@@ -25,6 +32,7 @@ jobs:
           conda install git-lfs -c conda-forge
           git-lfs install
           conda install gh -c conda-forge
+
       - name: Install ersilia
         run: |
           source activate
@@ -33,6 +41,19 @@ jobs:
           conda init
           python -m pip install git+https://github.com/ersilia-os/ersilia.git
   
+      - name: Update metadata to AirTable
+        id: update-metadata-to-airtable
+        env:
+          USER_NAME: ${{ github.repository_owner }}
+          BRANCH: "main"
+          REPO_NAME: ${{ steps.create-model-repo.outputs.repo_name }}
+          AIRTABLE_API_KEY: ${{ secrets.AIRTABLE_API_KEY }}
+        run: |
+          source activate
+          echo "Updating metadata to AirTable looking at owner: $USER_NAME"
+          wget https://raw.githubusercontent.com/ersilia-os/ersilia/master/.github/scripts/update_metadata_to_airtable.py
+          python3 update_metadata_to_airtable.py $USER_NAME $REPO_NAME $BRANCH $AIRTABLE_API_KEY
+
       - name: Predict output
         env:
           MODEL_ID: ${{ github.event.repository.name }}
