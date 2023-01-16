@@ -1,8 +1,8 @@
-name: Model Test on push
+name: Model Test on PR
 on:
-  push: 
-    branches: ['main']
-  
+  pull_request:
+    types: [opened, reopened] 
+
 jobs:
   test:
     if: github.repository != 'ersilia-os/eos-template'
@@ -19,7 +19,7 @@ jobs:
       - name: Check repository owner
         id: check-repository-owner
         env:
-          USER_NAME: ${{ github.repository_owner }}
+          USER_NAME: ${{ github.event.pull_request.head.repo.owner.login }}
         run: |
           echo "This is the repository owner: $USER_NAME"
 
@@ -42,7 +42,7 @@ jobs:
       - name: Update metadata to AirTable
         id: update-metadata-to-airtable
         env:
-          USER_NAME: ${{ github.repository_owner }}
+          USER_NAME: ${{ github.event.pull_request.head.repo.owner.login }}
           BRANCH: "main"
           REPO_NAME: ${{ steps.create-model-repo.outputs.repo_name }}
           AIRTABLE_API_KEY: ${{ secrets.AIRTABLE_API_KEY }}
