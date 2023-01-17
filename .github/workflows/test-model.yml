@@ -45,6 +45,14 @@ jobs:
           wget https://raw.githubusercontent.com/ersilia-os/ersilia/master/.github/scripts/update_metadata_to_airtable.py
           python3 update_metadata_to_airtable.py $USER_NAME $REPO_NAME $BRANCH $AIRTABLE_API_KEY
 
+      - name: Update README file
+        id: update-readme-file
+        env:
+          MODEL_ID: ${{ github.event.repository.name }}
+        run: |
+          source activate
+          echo "Updating README file with AirTable metadata for model: $MODEL_ID"
+
       - name: Predict output
         env:
           MODEL_ID: ${{ github.event.repository.name }}

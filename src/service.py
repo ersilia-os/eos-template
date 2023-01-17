@@ -16,17 +16,20 @@ import csv
 CHECKPOINTS_BASEDIR = "checkpoints"
 FRAMEWORK_BASEDIR = "framework"
 
+
 def load_model(framework_dir, checkpoints_dir):
     mdl = Model()
     mdl.load(framework_dir, checkpoints_dir)
     return mdl
+
 
 def Float(x):
     try:
         return float(x)
     except:
         return None
-    
+
+
 def String(x):
     x = str(x)
     if not x:
@@ -65,16 +68,14 @@ class Model(object):
         output_file = os.path.join(tmp_folder, self.OUTPUT_FILE)
         log_file = os.path.join(tmp_folder, self.LOG_FILE)
         with open(data_file, "w") as f:
-            f.write("input"+os.linesep)
+            f.write("input" + os.linesep)
             for inp in input_list:
-                f.write(inp+os.linesep)
+                f.write(inp + os.linesep)
         run_file = os.path.join(tmp_folder, self.RUN_FILE)
         with open(run_file, "w") as f:
             lines = [
                 "bash {0}/run.sh {0} {1} {2}".format(
-                    self.framework_dir,
-                    data_file,
-                    output_file
+                    self.framework_dir, data_file, output_file
                 )
             ]
             f.write(os.linesep.join(lines))
@@ -88,14 +89,11 @@ class Model(object):
             h = next(reader)
             R = []
             for r in reader:
-                R += [{"outcome": [Float(x) for x in r]}] # <-- EDIT: Modify according to type of output (Float, String...)
-        meta = {
-            "outcome": h
-        }
-        result = {
-            "result": R,
-            "meta": meta
-        }
+                R += [
+                    {"outcome": [Float(x) for x in r]}
+                ]  # <-- EDIT: Modify according to type of output (Float, String...)
+        meta = {"outcome": h}
+        result = {"result": R, "meta": meta}
         shutil.rmtree(tmp_folder)
         return result
 
