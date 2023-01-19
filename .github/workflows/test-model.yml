@@ -48,6 +48,7 @@ jobs:
       - name: Update README file
         id: update-readme-file
         env:
+          GITHUB_TOKEN: ${{ secrets.PAT }} # PAT for the ersilia-bot GitHub account
           MODEL_ID: ${{ github.event.repository.name }}
         run: |
           source activate
