@@ -5,13 +5,16 @@
     "Title": "",
     "Description": "",
     "Mode": "",
+    "Task": [],
     "Input": [],
     "Input Shape": "",
-    "Task": [],
     "Output": [],
+    "Output Type": [],
+    "Output Shape": "",
     "Interpretation": "",
     "Tag": [],
     "Publication": "",
     "Source": "",
-    "License": ""
+    "License": "",
+    "Contributor": ""
 }
