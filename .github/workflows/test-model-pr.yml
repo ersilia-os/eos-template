@@ -1,6 +1,7 @@
 name: Model Test on PR 
-on: pull_request
-
+on: 
+  pull_request:
+    types: [opened, reopened, edited] 
 jobs:
   test:
     if: github.repository != 'ersilia-os/eos-template'
