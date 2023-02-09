@@ -90,3 +90,16 @@ jobs:
           name: debug-logs
           retention-days: 1
           path: /home/runner/eos/console.log
+          
+      - name: Create a Test issue
+        uses: actions-ecosystem/action-create-issue@b63bc2bbacb6a838dfe4a9f70da6665ae0962a49
+        id: create_issue 
+        with:
+          github_token: ${{ secrets.github_token }}
+          title: ${{ vars.test_issue_title }}
+          assignees: |
+            ${{ vars.assignees }}
+          body: |
+            ## Test Issue
+          labels: |
+            test
