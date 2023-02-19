@@ -91,6 +91,14 @@ jobs:
           retention-days: 1
           path: /home/runner/eos/console.log
           
+      - name: Shuffle assignees
+        id: shuffle
+        run: |
+          export assignees=$(echo "${{ vars.assignees }}" | awk 'BEGIN {FS=","}; {srand();split($0,a,FS); print a[int(rand()*NF+1)]}')
+          echo "$assignees" >> $GITHUB_STEP_SUMMARY
+          echo "shuffled_assignee=$assignees" >> $GITHUB_OUTPUT
+          echo "shuffled_assignee=$assignees" >> $GITHUB_ENV
+          
       - name: Create a Test issue
         uses: actions-ecosystem/action-create-issue@b63bc2bbacb6a838dfe4a9f70da6665ae0962a49
         id: create_issue 
@@ -98,7 +106,7 @@ jobs:
           github_token: ${{ secrets.github_token }}
           title: ${{ vars.test_issue_title }}
           assignees: |
-            ${{ vars.assignees }}
+            ${{ steps.shuffle.outputs.shuffled_assignee }}
           body: |
             ## Test Issue
           labels: |
