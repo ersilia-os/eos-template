@@ -100,6 +100,7 @@ jobs:
           assignees: |
             ${{ vars.assignees }}
           body: |
-            ## Test Issue
+            This model is ready for testing. If you are assigned to this issue, please try it out both on the CLI and Google Colab and let us know if it works!
+      
           labels: |
             test
