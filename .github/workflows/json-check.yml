@@ -11,9 +11,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: checkout
-        uses: actions/checkout@ac593985615ec2ede58e132d2e21d2b1cbd6127c # pin@v3.3.0
+        uses: actions/checkout@8e5e7e5ab8b370d6c329ec480221332ada57f0ab # pin@v3.5.2
 
       - name: json syntax check
-        uses: limitusus/json-syntax-check@94555527ace7b96df4a600874a4aafd735842780 # pin@v2.0.0
-        with:
-          pattern: "\\.json$"
+        id: json-yaml-validate
+        uses: GrantBirki/json-yaml-validate@87b2d309a02f4942c5e602183eeea11008a640f9 # pin@v1.4.0
