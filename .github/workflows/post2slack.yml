@@ -1,7 +1,7 @@
 name: send slack message
 on:
   issues:
-    type: [created]
+    types: [opened]
 
 jobs:
   slack:
