@@ -1,9 +1,10 @@
 name: Model Test on push
+
 on:
   push: 
     branches: ['main']
   workflow_dispatch:
-  
+
 jobs:
   test:
     if: github.repository != 'ersilia-os/eos-template'
@@ -29,6 +30,7 @@ jobs:
           conda install git-lfs -c conda-forge
           git-lfs install
           conda install gh -c conda-forge
+
       - name: Install ersilia
         run: |
           source activate
@@ -50,6 +52,7 @@ jobs:
           wget https://raw.githubusercontent.com/ersilia-os/ersilia/master/.github/scripts/update_metadata_to_airtable.py
           python3 update_metadata_to_airtable.py $USER_NAME $REPO_NAME $BRANCH $AIRTABLE_API_KEY
           rm update_metadata_to_airtable.py
+
       - name: Update README file
         id: update-readme-file
         env:
@@ -61,6 +64,7 @@ jobs:
           python3 update_readme_from_airtable.py $MODEL_ID .
           rm update_readme_from_airtable.py
           less README.md
+
       - name: Commit and push changes done to the README file
         uses: actions-js/push@master
         with:
@@ -101,6 +105,5 @@ jobs:
             ${{ vars.assignees }}
           body: |
             This model is ready for testing. If you are assigned to this issue, please try it out both on the CLI and Google Colab and let us know if it works!
-      
           labels: |
             test

@@ -1,12 +1,14 @@
-name: Model Test on PR 
+name: Model Test on PR
+
 on: 
-  pull_request
+  pull_request:
+
 jobs:
   test:
     if: github.repository != 'ersilia-os/eos-template'
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@755da8c3cf115ac066823e79a1e1788f8940201b # pin@v3.2
+      - uses: actions/checkout@v3.5.2
         with:
           lfs: true
       
