@@ -1,16 +1,17 @@
 name: Model Test on push
+
 on:
   push: 
     branches: ['main']
   workflow_dispatch:
-  
+
 jobs:
   test:
     if: github.repository != 'ersilia-os/eos-template'
     runs-on: ubuntu-latest
     steps:
       - name: Checkout persist credentials
-        uses: actions/checkout@master
+        uses: actions/checkout@8e5e7e5ab8b370d6c329ec480221332ada57f0ab # pin@v3.5.2
         with:
           persist-credentials: false # otherwise, the token used is the GITHUB_TOKEN, instead of your personal token
           fetch-depth: 0 # otherwise, you will failed to push refs to dest repo
@@ -29,6 +30,7 @@ jobs:
           conda install git-lfs -c conda-forge
           git-lfs install
           conda install gh -c conda-forge
+
       - name: Install ersilia
         run: |
           source activate
@@ -50,6 +52,7 @@ jobs:
           wget https://raw.githubusercontent.com/ersilia-os/ersilia/master/.github/scripts/update_metadata_to_airtable.py
           python3 update_metadata_to_airtable.py $USER_NAME $REPO_NAME $BRANCH $AIRTABLE_API_KEY
           rm update_metadata_to_airtable.py
+
       - name: Update README file
         id: update-readme-file
         env:
@@ -61,8 +64,9 @@ jobs:
           python3 update_readme_from_airtable.py $MODEL_ID .
           rm update_readme_from_airtable.py
           less README.md
+
       - name: Commit and push changes done to the README file
-        uses: actions-js/push@master
+        uses: actions-js/push@156f2b10c3aa000c44dbe75ea7018f32ae999772 # pin@v1.4
         with:
           author_name: "ersilia-bot"
           author_email: "ersilia-bot@users.noreply.github.com"
@@ -108,6 +112,6 @@ jobs:
           assignees: |
             ${{ steps.shuffle.outputs.shuffled_assignee }}
           body: |
-            ## Test Issue
+            This model is ready for testing. If you are assigned to this issue, please try it out both on the CLI and Google Colab and let us know if it works!
           labels: |
             test
