@@ -22,9 +22,14 @@ with open(input_file, "r") as f:
     reader = csv.reader(f)
     next(reader)  # skip header
     smiles_list = [r[0] for r in reader]
-
+    
 # run model
 outputs = my_model(smiles_list)
+
+#check input and output have the same lenght
+input_lenght = len(smiles_list)
+output_lenght = len(outputs)
+assert input_lenght == output_lenght
 
 # write output in a .csv file
 with open(output_file, "w") as f:
