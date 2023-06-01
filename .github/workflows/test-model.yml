@@ -112,6 +112,6 @@ jobs:
           assignees: |
             ${{ steps.shuffle.outputs.shuffled_assignee }}
           body: |
-            This model is ready for testing. If you are assigned to this issue, please try it out both on the CLI and Google Colab and let us know if it works!
+            This model is ready for testing. If you are assigned to this issue, please try it out using the CLI, Google Colab and DockerHub and let us know if it works!
           labels: |
             test
