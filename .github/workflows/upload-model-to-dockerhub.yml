@@ -44,13 +44,34 @@ jobs:
           python -m pip install requests
           python place_a_dockerfile_in_current_eos_repo.py $REPO_NAME
                                           
-      - name: Build and push
+      - name: Build and push (amd64)
+        id: build-amd64
         uses: docker/build-push-action@v2
         with:
           context: .
-          platforms: linux/amd64,linux/arm64
+          platforms: linux/amd64
           push: ${{ github.event_name != 'pull_request' }}
           tags: ersiliaos/${{ github.event.repository.name }}:latest
+  
+      - name: Check AMD64 Build
+        if: always()
+        run: echo "AMD64 build status:" "${{ steps.build-amd64.outcome }}"
+     
+
+      - name: Build and push (arm64)
+        id: build-arm64
+        if: always()
+        uses: docker/build-push-action@v2
+        with:
+          context: .
+          platforms: linux/arm64
+          push: ${{ github.event_name != 'pull_request' }}
+          tags: ersiliaos/${{ github.event.repository.name }}:latest
+
+      - name: Check ARM64 Build
+        if: always()
+        run: echo "ARM64 build status:" "${{ steps.build-arm64.outcome }}"
+       
           
       - name: Docker Hub Description
         uses: peter-evans/dockerhub-description@v3
@@ -59,3 +80,4 @@ jobs:
           password: ${{ secrets.DOCKERHUB_PASSWORD }}
           repository: ersiliaos/${{ github.event.repository.name }}
           short-description: "Ersilia Model Hub Identifier: ${{ github.event.repository.name }}"
+
