@@ -45,10 +45,30 @@ jobs:
           python place_a_dockerfile_in_current_eos_repo.py $REPO_NAME
                                           
       - name: Build and push
+        id: buildMultiple
+        continue-on-error: true
         uses: docker/build-push-action@v2
         with:
           context: .
           platforms: linux/amd64,linux/arm64
+          push: ${{ github.event_name != 'pull_request' }}
+          tags: ersiliaos/${{ github.event.repository.name }}:latest
+          
+      - name: Set build failure output
+        id: buildCheck
+        run: |
+          if [[ "${{ steps.buildMultiple.outcome }}" == "failure" ]]; then
+            echo "::set-output name=failed::true"
+          else
+            echo "::set-output name=failed::false"
+          fi
+      - name: Build only for Linux/amd64
+        id: buildSingle
+        if: steps.buildCheck.outputs.failed == 'true'
+        uses: docker/build-push-action@v2
+        with:
+          context: .
+          platforms: linux/amd64
           push: ${{ github.event_name != 'pull_request' }}
           tags: ersiliaos/${{ github.event.repository.name }}:latest
           
