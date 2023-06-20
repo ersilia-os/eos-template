@@ -3,7 +3,7 @@ on:
   workflow_dispatch:
   
   workflow_run:
-    workflows: ["Upload model to DockerHub"]
+    workflows: ["Model test on push"]
     types:
       - completed
   
@@ -32,6 +32,7 @@ jobs:
           conda install git-lfs -c conda-forge
           git-lfs install
           conda install gh -c conda-forge
+          
       - name: Install ersilia
         run: |
           source activate
@@ -39,7 +40,67 @@ jobs:
           echo "After conda init"
           conda init
           python -m pip install git+https://github.com/ersilia-os/ersilia.git
-        
+                  
+      - name: Update Metadata JSON file with DockerHub info
+        id: UpdateMetadata
+        run: |
+          python3 -c "
+          import json
+          with open('metadata.json', 'r') as f:
+             data = json.load(f)
+          data['S3'] = 'https://ersilia-models-zipped.s3.eu-central-1.amazonaws.com/{0}.zip'.format(data['Identifier'])
+          with open('metadata.json', 'w') as f:
+             json.dump(data, f, indent=4)
+          "
+          
+      - name: Commit and push changes done to the Metadata JSON file
+        uses: actions-js/push@156f2b10c3aa000c44dbe75ea7018f32ae999772 # pin@v1.4
+        with:
+          author_name: "ersilia-bot"
+          author_email: "ersilia-bot@users.noreply.github.com"
+          message: "updating metadata [skip ci]"
+          repository: "ersilia-os/${{ github.event.repository.name }}"
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          amend: true
+          force: true
+
+      - name: Update metadata to AirTable
+        id: update-metadata-to-airtable
+        env:
+          USER_NAME: ${{ github.repository_owner }}
+          BRANCH: "main"
+          REPO_NAME: ${{ github.event.repository.name }}
+          AIRTABLE_API_KEY: ${{ secrets.AIRTABLE_API_KEY }}
+        run: |
+          source activate
+          echo "Updating metadata to AirTable looking at owner: $USER_NAME"
+          wget https://raw.githubusercontent.com/ersilia-os/ersilia/master/.github/scripts/update_metadata_to_airtable.py
+          python3 update_metadata_to_airtable.py $USER_NAME $REPO_NAME $BRANCH $AIRTABLE_API_KEY
+          rm update_metadata_to_airtable.py
+  
+      - name: Update README file
+        id: update-readme-file
+        env:
+          MODEL_ID: ${{ github.event.repository.name }}
+        run: |
+          source activate
+          echo "Updating README file with AirTable metadata for model: $MODEL_ID"
+          wget https://raw.githubusercontent.com/ersilia-os/ersilia/master/.github/scripts/update_readme_from_airtable.py
+          python3 update_readme_from_airtable.py $MODEL_ID .
+          rm update_readme_from_airtable.py
+          less README.md
+
+      - name: Commit and push changes done to the README file
+        uses: actions-js/push@156f2b10c3aa000c44dbe75ea7018f32ae999772 # pin@v1.4
+        with:
+          author_name: "ersilia-bot"
+          author_email: "ersilia-bot@users.noreply.github.com"
+          message: "updating readme [skip ci]"
+          repository: "ersilia-os/${{ github.event.repository.name }}"
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          amend: true
+          force: true
+
       - name: Upload model to S3
         id: upload-model-to-s3
         env:
