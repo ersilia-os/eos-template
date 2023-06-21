@@ -9,7 +9,7 @@ on:
   
 jobs:
   upload_model_to_s3:
-    if: github.repository != 'ersilia-os/eos-template'
+    if: ${{ github.repository != 'ersilia-os/eos-template' && github.event.workflow_run.conclusion == 'success' }}
     runs-on: ubuntu-latest
     steps:
       - name: Checkout persist credentials
