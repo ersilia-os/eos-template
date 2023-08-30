@@ -1,3 +1,0 @@
-runs-on: ubuntu
-run: |
-  pip install rdkit
