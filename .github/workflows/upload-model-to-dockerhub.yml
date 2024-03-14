@@ -2,9 +2,14 @@ name: Upload model to DockerHub
 on:
   workflow_dispatch:
   
+  workflow_run:
+    workflows: ["Upload model to S3"]
+    types:
+      - completed
+  
 jobs:
   upload_model_to_dockerhub:
-    if: ${{ github.repository != 'ersilia-os/eos-template' }}
+    if: ${{ github.repository != 'ersilia-os/eos-template' && github.event.workflow_run.conclusion == 'success' }}
     runs-on: ubuntu-latest
     steps:
       # https://github.com/docker/setup-qemu-action
