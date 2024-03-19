@@ -64,6 +64,7 @@ jobs:
         id: buildMultiple
         continue-on-error: true
         uses: docker/build-push-action@v5
+        timeout-minutes: 45
         with:
           context: .
           platforms: linux/amd64,linux/arm64
