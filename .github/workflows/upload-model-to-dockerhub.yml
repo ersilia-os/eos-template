@@ -59,6 +59,61 @@ jobs:
           wget https://raw.githubusercontent.com/ersilia-os/ersilia/master/.github/scripts/place_a_dockerfile_in_current_eos_repo.py
           python -m pip install requests
           python place_a_dockerfile_in_current_eos_repo.py $REPO_NAME
+
+      # We cannot tag it as anything other than latest because 
+      # ersilia cli only looks for the 'latest' tag
+      - name: Build only AMD64 Image for Testing
+        id: buildForTest
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          load: true
+          tags: ersiliaos/${{ github.event.repository.name }}:latest
+
+      - name: Add conda to system path
+        run: echo $CONDA/bin >> $GITHUB_PATH
+      
+      - name: Source conda
+        run: source $CONDA/etc/profile.d/conda.sh
+
+      - name: Set Python to 3.10.10
+        run:
+         conda install -y python=3.10.10 
+
+      - name: Install dependencies
+        run: |
+          source activate
+          conda init
+          conda install git-lfs -c conda-forge
+          git-lfs install
+          conda install gh -c conda-forge
+
+      - name: Install ersilia
+        run: |
+          source activate
+          python --version
+          echo "After conda init"
+          conda init
+          python -m pip install git+https://github.com/ersilia-os/ersilia.git
+          
+      # TODO This is very hacky, maybe we want to use the ersilia test command in the future for this
+      - name: Test Built Image
+        id: testBuiltImage
+        run: |
+          ersilia -v fetch ${{ github.event.repository.name }} --from_dockerhub
+          ersilia -v serve ${{ github.event.repository.name }}
+          ersilia -v run -i "CCCC" -o "output.json"
+          expected=$(jq '.[0].output.outcome[]' output.json | wc -l)
+          result=$(jq '.[0].output.outcome[] | select(. != null)' output.json | wc -l)
+          echo "Expected correct outcomes $expected"
+          echo "Returned correct outcomes $result"
+          if [ $expected -ne $result ]
+            then
+              echo "Error in model output, aborting build and push"
+              exit 1
+          fi
+        env:
+          PULL_IMAGE: n
         
       - name: Build and push
         id: buildMultiple
@@ -93,7 +148,7 @@ jobs:
           tags: ersiliaos/${{ github.event.repository.name }}:latest
 
       - name: Update Metadata JSON file with DockerHub info
-        id: UpdateMetadata
+        id: updateMetadata
         run: |
           mv Dockerfile_legacy Dockerfile
           python3 -c "
@@ -122,32 +177,6 @@ jobs:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           amend: true
           force: true
-
-      - name: Add conda to system path
-        run: echo $CONDA/bin >> $GITHUB_PATH
-      
-      - name: Source conda
-        run: source $CONDA/etc/profile.d/conda.sh
-
-      - name: Set Python to 3.10.10
-        run:
-         conda install -y python=3.10.10 
-
-      - name: Install dependencies
-        run: |
-          source activate
-          conda init
-          conda install git-lfs -c conda-forge
-          git-lfs install
-          conda install gh -c conda-forge
-
-      - name: Install ersilia
-        run: |
-          source activate
-          python --version
-          echo "After conda init"
-          conda init
-          python -m pip install git+https://github.com/ersilia-os/ersilia.git
   
       - name: Update metadata to AirTable
         id: update-metadata-to-airtable
