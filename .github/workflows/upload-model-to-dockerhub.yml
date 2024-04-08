@@ -59,6 +59,30 @@ jobs:
           wget https://raw.githubusercontent.com/ersilia-os/ersilia/master/.github/scripts/place_a_dockerfile_in_current_eos_repo.py
           python -m pip install requests
           python place_a_dockerfile_in_current_eos_repo.py $REPO_NAME
+
+      # We cannot tag it as anything other than latest because 
+      # ersilia cli only looks for the 'latest' tag
+      - name: Build and export to Docker
+        id: buildForTest
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          load: true
+          tags: ersiliaos/${{ github.event.repository.name }}:latest
+        
+      - name: Test
+        id: testBuiltImage
+        run: |
+          export PULL_IMAGE=n
+          ersilia -v serve ${{ github.event.repository.name }}
+          ersilia -v run -i "CCCC" -o "output.json"
+          expected=$(jq '.[0].output.outcome[]' output.json | wc -l)
+          result=$(jq '.[0].output.outcome[] | select(. != null)' output.json | wc -l)
+          if [ $expected -ne $ $result ]
+            then
+              echo "Error in model output, aborting build and push"
+              exit 1
+          fi
         
       - name: Build and push
         id: buildMultiple
