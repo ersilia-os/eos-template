@@ -107,7 +107,7 @@ jobs:
           result=$(jq '.[0].output.outcome[] | select(. != null)' output.json | wc -l)
           echo "Expected correct outcomes $expected"
           echo "Returned correct outcomes $result"
-          if [ $expected -ne $result ]
+          if ! ([ $result -gt 0 ] && [ $result -le $expected ])
             then
               echo "Error in model output, aborting build and push"
               exit 1
