@@ -104,7 +104,7 @@ jobs:
           ersilia -v serve ${{ github.event.repository.name }}
           ersilia -v run -i "CCCC" -o "output.csv"
           ersilia close
-          output=$(python scripts/verify_model_outcome.py output.csv)
+          output=$(python .github/scripts/verify_model_outcome.py output.csv)
           if echo "$output" | grep -q "All outcomes are null"; then
             echo "Error in model outcome, aborting build"
             exit 1
