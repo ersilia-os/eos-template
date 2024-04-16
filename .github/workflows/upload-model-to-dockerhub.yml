@@ -36,6 +36,7 @@ jobs:
           fetch-depth: 0 # otherwise, you will failed to push refs to dest repo
           lfs: 'true'
 
+# This might stop working in the future, so we need to keep an eye on it
       - name: Free Disk Space (Ubuntu)
         uses: jlumbroso/free-disk-space@main
         with:
