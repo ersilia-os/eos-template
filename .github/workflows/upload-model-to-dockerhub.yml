@@ -110,6 +110,7 @@ jobs:
             echo "Error in model outcome, aborting build"
             exit 1
           fi
+          rm output.csv
         env:
           PULL_IMAGE: n
         
