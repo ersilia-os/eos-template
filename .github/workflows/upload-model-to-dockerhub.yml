@@ -103,7 +103,8 @@ jobs:
         run: |
           ersilia -v fetch ${{ github.event.repository.name }} --from_dockerhub
           ersilia -v serve ${{ github.event.repository.name }}
-          ersilia -v run -i "CCCC" -o "output.csv"
+          ersilia example -n 1 -f input.csv --predefined
+          ersilia -v run -i "input.csv" -o "output.csv"
           ersilia close
           output=$(python .github/scripts/verify_model_outcome.py output.csv)
           if echo "$output" | grep -q "All outcomes are null"; then
