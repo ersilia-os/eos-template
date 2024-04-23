@@ -171,7 +171,7 @@ jobs:
           gh auth login --with-token <<< ${{ secrets.GITHUB_TOKEN }}
           issue_number=$(gh issue list --limit 100 --search "${{ vars.DOCKER_BUILD_FAILURE_ISSUE_TITLE }}" --json number --jq '.[0].number')
           echo "::set-output name=issue_number::$issue_number"
-        if: steps.testBuiltImageV1.outcome == 'success'
+        if: ${{ (steps.testBuiltImageV2.outcome == 'failure') && (steps.testBuiltImageV1.outcome == 'success') }}
 
       - name: Create an alert issue
         uses: actions-ecosystem/action-create-issue@b63bc2bbacb6a838dfe4a9f70da6665ae0962a49
