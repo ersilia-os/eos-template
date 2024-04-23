@@ -166,7 +166,7 @@ jobs:
 # Create an issue to track that this model did not work with the V2 image
 
       - name: Check for existing issue
-        id: check_existing_issue
+        id: check_existing_alert_issue
         run: |
           gh auth login --with-token <<< ${{ secrets.GITHUB_TOKEN }}
           issue_number=$(gh issue list --limit 100 --search "${{ vars.DOCKER_BUILD_FAILURE_ISSUE_TITLE }}" --json number --jq '.[0].number')
@@ -294,3 +294,34 @@ jobs:
           password: ${{ secrets.DOCKERHUB_PASSWORD }}
           repository: ersiliaos/${{ github.event.repository.name }}
           short-description: "Ersilia Model Hub Identifier: ${{ github.event.repository.name }}"
+
+# Create an issue within the repository to track that this model is ready for testing
+
+      - name: Shuffle assignees
+        id: shuffle
+        run: |
+          export assignees=$(echo "${{ vars.assignees }}" | awk 'BEGIN {FS=","}; {srand();split($0,a,FS); print a[int(rand()*NF+1)]}')
+          echo "$assignees" >> $GITHUB_STEP_SUMMARY
+          echo "shuffled_assignee=$assignees" >> $GITHUB_OUTPUT
+          echo "shuffled_assignee=$assignees" >> $GITHUB_ENV
+
+      - name: Check for existing issue
+        id: check_existing_test_issue
+        run: |
+          gh auth login --with-token <<< ${{ secrets.GITHUB_TOKEN }}
+          issue_number=$(gh issue list --limit 100 --search "${{ vars.test_issue_title }}" --json number --jq '.[0].number')
+          echo "::set-output name=issue_number::$issue_number"
+   
+      - name: Create a Test issue
+        uses: actions-ecosystem/action-create-issue@b63bc2bbacb6a838dfe4a9f70da6665ae0962a49
+        id: create_test_issue 
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          title: ${{ vars.TEST_ISSUE_TITLE }}
+          assignees: |
+            ${{ steps.shuffle.outputs.shuffled_assignee }}
+          body: |
+            This model is ready for testing. If you are assigned to this issue, please try it out using the CLI, Google Colab and DockerHub and let us know if it works!
+          labels: |
+            test
+        if: steps.check_issue.outputs.issue_number == ''
