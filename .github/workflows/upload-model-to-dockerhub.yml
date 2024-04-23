@@ -51,26 +51,8 @@ jobs:
           haskell: true
           large-packages: true
           swap-storage: true
-        
-      - name: Generate the Dockerfile
-        id: generate-dockerfile
-        env:
-          REPO_NAME: ${{ github.event.repository.name }}
-        run: |
-          wget https://raw.githubusercontent.com/ersilia-os/ersilia/master/.github/scripts/place_a_dockerfile_in_current_eos_repo.py
-          python -m pip install requests
-          python place_a_dockerfile_in_current_eos_repo.py $REPO_NAME
-
-      # We cannot tag it as anything other than latest because 
-      # ersilia cli only looks for the 'latest' tag
-      - name: Build only AMD64 Image for Testing
-        id: buildForTest
-        uses: docker/build-push-action@v5
-        with:
-          context: .
-          load: true
-          tags: ersiliaos/${{ github.event.repository.name }}:latest
-
+  
+# Install ersilia in the next few steps to test the built image with ersilia CLI
       - name: Add conda to system path
         run: echo $CONDA/bin >> $GITHUB_PATH
       
@@ -96,10 +78,33 @@ jobs:
           echo "After conda init"
           conda init
           python -m pip install git+https://github.com/ersilia-os/ersilia.git
+
+# Build a V2 image and test it with ersilia CLI
+
+      - name: Generate the V2 Dockerfile
+        id: generateDockerfileV2
+        env:
+          REPO_NAME: ${{ github.event.repository.name }}
+        run: |
+          wget https://raw.githubusercontent.com/ersilia-os/ersilia/master/.github/scripts/place_a_dockerfile_in_current_eos_repo.py
+          python -m pip install requests
+          python place_a_dockerfile_in_current_eos_repo.py $REPO_NAME
+          rm place_a_dockerfile_in_current_eos_repo.py
+
+      # We cannot tag it as anything other than latest because 
+      # ersilia cli only looks for the 'latest' tag
+      - name: Build only V2 AMD64 Image for Testing
+        id: buildForTestV2
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          load: true
+          tags: ersiliaos/${{ github.event.repository.name }}:latest
           
       # TODO This is very hacky, maybe we want to use the ersilia test command in the future for this
-      - name: Test Built Image
-        id: testBuiltImage
+      - name: Test built v2 image
+        id: testBuiltImageV2
+        continue-on-error: true  # Allow this to fail
         run: |
           ersilia -v fetch ${{ github.event.repository.name }} --from_dockerhub
           ersilia -v serve ${{ github.event.repository.name }}
@@ -114,7 +119,50 @@ jobs:
           rm output.csv
         env:
           PULL_IMAGE: n
-        
+
+# If the test failed build a V1 image and test it with ersilia CLI
+
+      - name: Generate the V1 Dockerfile
+        id: generateDockerfileV1
+        if: steps.testBuiltImageV2.outcome == 'failure'
+        env:
+          REPO_NAME: ${{ github.event.repository.name }}
+        run: |
+          wget https://raw.githubusercontent.com/ersilia-os/ersilia/master/.github/scripts/place_a_dockerfile_in_current_eos_repo.py
+          python -m pip install requests
+          python place_a_dockerfile_in_current_eos_repo.py $REPO_NAME v1
+          rm place_a_dockerfile_in_current_eos_repo.py
+
+      # We cannot tag it as anything other than latest because 
+      # ersilia cli only looks for the 'latest' tag
+      - name: Build only V1 AMD64 Image for Testing
+        id: buildForTestV1
+        if: steps.testBuiltImageV2.outcome == 'failure'
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          load: true
+          tags: ersiliaos/${{ github.event.repository.name }}:latest
+          
+      # TODO This is very hacky, maybe we want to use the ersilia test command in the future for this
+      - name: Test built v1 image
+        id: testBuiltImageV1
+        if: steps.testBuiltImageV2.outcome == 'failure'
+        run: |
+          ersilia -v fetch ${{ github.event.repository.name }} --from_dockerhub
+          ersilia -v serve ${{ github.event.repository.name }}
+          ersilia example -n 1 -f input.csv --predefined
+          ersilia -v run -i "input.csv" -o "output.csv"
+          ersilia close
+          output=$(python .github/scripts/verify_model_outcome.py output.csv)
+          if echo "$output" | grep -q "All outcomes are null"; then
+            echo "Error in model outcome, aborting build"
+            exit 1
+          fi
+          rm output.csv
+        env:
+          PULL_IMAGE: n
+
       - name: Build and push
         id: buildMultiple
         continue-on-error: true
