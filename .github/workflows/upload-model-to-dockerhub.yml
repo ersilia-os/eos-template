@@ -163,6 +163,30 @@ jobs:
         env:
           PULL_IMAGE: n
 
+# Create an issue to track that this model did not work with the V2 image
+
+      - name: Check for existing issue
+        id: check_existing_issue
+        run: |
+          gh auth login --with-token <<< ${{ secrets.GITHUB_TOKEN }}
+          issue_number=$(gh issue list --limit 100 --search "${{ vars.DOCKER_BUILD_FAILURE_ISSUE_TITLE }}" --json number --jq '.[0].number')
+          echo "::set-output name=issue_number::$issue_number"
+        if: steps.testBuiltImageV1.outcome == 'success'
+
+      - name: Create an alert issue
+        uses: actions-ecosystem/action-create-issue@b63bc2bbacb6a838dfe4a9f70da6665ae0962a49
+        id: create_alert_issue 
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          title: ${{ vars.DOCKER_BUILD_FAILURE_ISSUE_TITLE }}
+          body: |
+            This model failed to build with v2 image. Please investigate and fix the issue.
+          labels: |
+            bug
+        if: steps.check_existing_issue.outputs.issue_number == ''
+
+# Finally build and push if everything is successful
+
       - name: Build and push
         id: buildMultiple
         continue-on-error: true
