@@ -324,4 +324,4 @@ jobs:
             This model is ready for testing. If you are assigned to this issue, please try it out using the CLI, Google Colab and DockerHub and let us know if it works!
           labels: |
             test
-        if: steps.check_issue.outputs.issue_number == ''
+        if: steps.check_existing_test_issue.outputs.issue_number == ''
