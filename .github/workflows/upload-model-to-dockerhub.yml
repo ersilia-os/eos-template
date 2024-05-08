@@ -126,7 +126,7 @@ jobs:
 
       - name: Generate the V1 Dockerfile
         id: generateDockerfileV1
-        if: steps.testBuiltImageV2.outcome == 'failure'
+        if: steps.testBuiltImageV2.outcome == 'failure' || steps.testBuiltImageV2.outcome == 'skipped'
         env:
           REPO_NAME: ${{ github.event.repository.name }}
         run: |
@@ -140,7 +140,6 @@ jobs:
       # ersilia cli only looks for the 'latest' tag
       - name: Build only V1 AMD64 Image for Testing
         id: buildForTestV1
-        if: steps.testBuiltImageV2.outcome == 'failure'
         uses: docker/build-push-action@v5
         with:
           context: .
@@ -150,7 +149,6 @@ jobs:
       # TODO This is very hacky, maybe we want to use the ersilia test command in the future for this
       - name: Test built v1 image
         id: testBuiltImageV1
-        if: steps.testBuiltImageV2.outcome == 'failure'
         run: |
           ersilia -v fetch ${{ github.event.repository.name }} --from_dockerhub
           ersilia -v serve ${{ github.event.repository.name }}
