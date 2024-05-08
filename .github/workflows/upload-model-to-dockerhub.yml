@@ -95,6 +95,7 @@ jobs:
       # ersilia cli only looks for the 'latest' tag
       - name: Build only V2 AMD64 Image for Testing
         id: buildForTestV2
+        continue-on-error: true  # Allow this to fail; this might fail bacause conda-pack would not work for this model
         uses: docker/build-push-action@v5
         with:
           context: .
@@ -119,7 +120,8 @@ jobs:
           rm output.csv
         env:
           PULL_IMAGE: n
-
+        if: steps.buildForTestV2.outcome == 'success'
+        
 # If the test failed build a V1 image and test it with ersilia CLI
 
       - name: Generate the V1 Dockerfile
