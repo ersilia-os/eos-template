@@ -140,6 +140,7 @@ jobs:
       # ersilia cli only looks for the 'latest' tag
       - name: Build only V1 AMD64 Image for Testing
         id: buildForTestV1
+        if: steps.testBuiltImageV2.outcome == 'failure'
         uses: docker/build-push-action@v5
         with:
           context: .
@@ -148,6 +149,7 @@ jobs:
           
       # TODO This is very hacky, maybe we want to use the ersilia test command in the future for this
       - name: Test built v1 image
+        if: steps.testBuiltImageV2.outcome == 'failure'
         id: testBuiltImageV1
         run: |
           ersilia -v fetch ${{ github.event.repository.name }} --from_dockerhub
