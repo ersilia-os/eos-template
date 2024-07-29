@@ -115,11 +115,52 @@ jobs:
             ersilia sample -n 5 -f input.csv
             ersilia -v api -i input.csv
             ersilia close
-          
-      - name: Upload log output
+
+  upload:
+    runs-on: ubuntu-latest
+    needs: test
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Create artifacts directory
+        run: mkdir -p /home/runner/artifacts
+
+      - name: Copy log files
+        run: |
+          # Copy log files to artifacts directory
+          cp /home/runner/eos/sessions/session_*/*.log /home/runner/artifacts/
+
+      - name: Zip contents of _logs folders
+        run: |
+          # Zip contents of _logs folders and move to artifacts
+          for dir in /home/runner/eos/sessions/session_*/_logs/tmp/ersilia-*; do
+            if [ -d "$dir" ]; then
+              folder_name=$(basename "$dir")
+              zip -r "/home/runner/artifacts/${folder_name}.zip" "$dir"
+            fi
+          done
+
+      - name: Zip contents of logs folders
+        run: |
+          # Zip logs folders and move to artifacts
+          zip -r /home/runner/artifacts/logs_folders.zip /home/runner/eos/sessions/session_*/logs/tmp/ersilia-*
+
+      - name: Upload artifacts
         if: always()
-        uses: actions/upload-artifact@83fd05a356d7e2593de66fc9913b3002723633cb #pin v3.1.1
+        uses: actions/upload-artifact@v3
         with:
-          name: debug-logs
+          name: debug-artifacts
           retention-days: 14
-          path: /home/runner/eos/*.log
+          path: /home/runner/artifacts/          
+          
+      # - name: Upload log output
+      #   if: always()
+      #   uses: actions/upload-artifact@83fd05a356d7e2593de66fc9913b3002723633cb #pin v3.1.1
+      #   with:
+      #     name: debug-logs
+      #     retention-days: 14
+      #     path: /home/runner/eos/sessions/session_*/*.log
+
+      
+
