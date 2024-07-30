@@ -29,8 +29,8 @@ To specify dependencies for this model, use the `install.yml` file to populate a
 
 - `python` which expects a string value denoting a python version (eg `"3.10"`)
 - `commands` which expects a list of values, each of which is a list on its own, denoting the dependencies required by the model. Currently, dependencies `pip` and `conda` are supported. 
-- `pip` dependencies are expected to be three element lists in the format `["pip", "library", "version"]`
-- `conda` dependencies are expected to be four element lists in the format `["conda", "library", "version", "channel"]`, where channel is the conda channel to install the required library.
+- `pip` dependencies are expected to be three element lists in the format `["pip", "library", "version"]`. For example, a pip dependency for the package `rdkit` would look like: `["pip", "rdkit-pypi", "2022.3.1b1"]`
+- `conda` dependencies are expected to be four element lists in the format `["conda", "library", "version", "channel"]`, where channel is the conda channel to install the required library. For example, the conda depedency specification for pandas would look like: `["conda", "pandas", "1.3.5", "default"]`.
 
 The installation parser will raise an exception if dependencies are not specified in this format.
 
