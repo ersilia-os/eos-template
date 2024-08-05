@@ -103,7 +103,7 @@ jobs:
       - name: Predict output
         env:
           MODEL_ID: ${{ github.event.repository.name }}
-        uses: nick-fields/retry@v3
+        uses: nick-fields/retry@v4
         with:
           timeout_minutes: 10
           max_attempts: 3
@@ -116,44 +116,22 @@ jobs:
             ersilia -v api -i input.csv
             ersilia close
 
-      - name: Create artifacts directory
-        run: mkdir -p /home/runner/artifacts
-
-      - name: Copy log files
-        run: |
-          # Copy log files to artifacts directory
-          cp /home/runner/eos/sessions/session_*/*.log /home/runner/artifacts/
-
-      - name: Zip contents of _logs folders
-        run: |
-          # Zip contents of _logs folders and move to artifacts
-          for dir in /home/runner/eos/sessions/session_*/_logs/tmp/ersilia-*; do
-            if [ -d "$dir" ]; then
-              folder_name=$(basename "$dir")
-              zip -r "/home/runner/artifacts/${folder_name}.zip" "$dir"
-            fi
-          done
-
-      - name: Zip contents of logs folders
-        run: |
-          # Zip logs folders and move to artifacts
-          zip -r /home/runner/artifacts/logs_folders.zip /home/runner/eos/sessions/session_*/logs/tmp/ersilia-*
-
-      - name: Upload artifacts
+      - name: Copy log output
         if: always()
-        uses: actions/upload-artifact@v3
+        run: |
+          mkdir -p /home/runner/artifacts
+          cp /home/runner/eos/sessions/session_*/*.log /home/runner/artifacts/
+          cp -rL /home/runner/eos/sessions/session_*/_logs/* /home/runner/artifacts/
+          zip -r /home/runner/artifacts/logs_folders.zip /home/runner/eos/sessions/session_*/logs/*
+         
+      - name: Upload log output
+        if: always()
+        uses: actions/upload-artifact@v4
         with:
           name: debug-artifacts
           retention-days: 14
-          path: /home/runner/artifacts/          
-          
-      # - name: Upload log output
-      #   if: always()
-      #   uses: actions/upload-artifact@83fd05a356d7e2593de66fc9913b3002723633cb #pin v3.1.1
-      #   with:
-      #     name: debug-logs
-      #     retention-days: 14
-      #     path: /home/runner/eos/sessions/session_*/*.log
+          path: /home/runner/artifacts/*          
+         
 
       
 

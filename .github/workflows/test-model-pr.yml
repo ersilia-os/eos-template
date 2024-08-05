@@ -72,7 +72,7 @@ jobs:
       - name: Predict output
         env:
           MODEL_ID: ${{ github.event.repository.name }}
-        uses: nick-fields/retry@v3
+        uses: nick-fields/retry@v4
         with:
           timeout_minutes: 10
           max_attempts: 3
@@ -85,10 +85,18 @@ jobs:
             ersilia -v api -i input.csv
             ersilia close
           
+      - name: Copy log output
+        if: always()
+        run: |
+          mkdir -p /home/runner/artifacts
+          cp /home/runner/eos/sessions/session_*/*.log /home/runner/artifacts/
+          cp -rL /home/runner/eos/sessions/session_*/_logs/* /home/runner/artifacts/
+          zip -r /home/runner/artifacts/logs_folders.zip /home/runner/eos/sessions/session_*/logs/*
+         
       - name: Upload log output
         if: always()
-        uses: actions/upload-artifact@83fd05a356d7e2593de66fc9913b3002723633cb #pin v3.1.1
+        uses: actions/upload-artifact@v4
         with:
-          name: debug-logs
+          name: debug-artifacts
           retention-days: 14
-          path: /home/runner/eos/*.log
+          path: /home/runner/artifacts/*  
