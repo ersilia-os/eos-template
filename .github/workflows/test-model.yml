@@ -130,5 +130,4 @@ jobs:
         with:
           name: debug-logs
           retention-days: 14
-          path: /home/runner/artifacts/*          
-         
+          path: /home/runner/artifacts/*                
