@@ -113,7 +113,7 @@ jobs:
             ersilia -v fetch $MODEL_ID --repo_path .
             ersilia -v serve $MODEL_ID
             ersilia sample -n 5 -f input.csv
-            ersilia -v api -i input.csv
+            ersilia -v run -i input.csv
             ersilia close
           
       - name: Upload log output
