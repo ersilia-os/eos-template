@@ -32,7 +32,10 @@ To specify dependencies for this model, use the `install.yml` file to populate a
 - `pip` dependencies are expected to be three element lists in the format `["pip", "library", "version"]`
 - `conda` dependencies are expected to be four element lists in the format `["conda", "library", "version", "channel"]`, where channel is the conda channel to install the required library.
 
-The installation parser will raise an exception if dependencies are not specified in this format.
+The installation parser will raise an exception if dependencies are not specified in the aforementioned format. \
+
+**Note**: Please note that we realise that this form of dependency specification is restrictive. We are [working](https://github.com/ersilia-os/ersilia-pack/issues/21) on extending how Ersilia Pack handles dependency specification, for example, to handle VCS and URL based dependencies. 
+
 
 ## Specifying Model Metadata
 
