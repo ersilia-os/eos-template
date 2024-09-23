@@ -52,59 +52,38 @@ jobs:
           large-packages: true
           swap-storage: true
   
-# Install ersilia in the next few steps to test the built image with ersilia CLI
-      - name: Add conda to system path
-        run: echo $CONDA/bin >> $GITHUB_PATH
-      
-      - name: Source conda
-        run: source $CONDA/etc/profile.d/conda.sh
+# Install ersilia-pack and requests in environment
+      - name: Setup Python
+        uses: actions/setup-python@f677139bbe7f9c59b41e40162b753c062f5d49a3
+        with:
+          python-version: '3.10'
 
-      - name: Set Python to 3.10.10
-        run:
-         conda install -y python=3.10.10 
-
-      - name: Install dependencies
+      - name: Install ersilia-pack and requests
         run: |
-          source activate
-          conda init
-          conda install git-lfs -c conda-forge
-          git-lfs install
-          conda install gh -c conda-forge
-
-      - name: Install ersilia
-        run: |
-          source activate
-          python --version
-          echo "After conda init"
-          conda init
-          python -m pip install git+https://github.com/ersilia-os/ersilia.git
-
-# Build a V2 image and test it with ersilia CLI
-
-      - name: Generate the V2 Dockerfile
-        id: generateDockerfileV2
-        env:
-          REPO_NAME: ${{ github.event.repository.name }}
-        run: |
-          wget -O place_a_dockerfile_in_current_eos_repo.py https://raw.githubusercontent.com/ersilia-os/ersilia/master/.github/scripts/place_a_dockerfile_in_current_eos_repo.py
+          python -m pip install git+https://github.com/ersilia-os/ersilia-pack.git
           python -m pip install requests
-          python place_a_dockerfile_in_current_eos_repo.py $REPO_NAME
-          rm place_a_dockerfile_in_current_eos_repo.py
+
+      - name: Generate Dockerfile
+        id: generateDockerfile
+        run: |
+          python .github/scripts/resolve_dockerfile.py
+
+# Build image and test it with ersilia CLI
 
       # We cannot tag it as anything other than latest because 
       # ersilia cli only looks for the 'latest' tag
-      - name: Build only V2 AMD64 Image for Testing
-        id: buildForTestV2
+      - name: Build only AMD64 Image for Testing
+        id: buildForTest
         continue-on-error: true  # Allow this to fail; this might fail bacause conda-pack would not work for this model
-        uses: docker/build-push-action@v5
+        uses: docker/build-push-action@v6.7.0
         with:
           context: .
           load: true
           tags: ersiliaos/${{ github.event.repository.name }}:latest
           
       # TODO This is very hacky, maybe we want to use the ersilia test command in the future for this
-      - name: Test built v2 image
-        id: testBuiltImageV2
+      - name: Test built image
+        id: testBuiltImage
         continue-on-error: true  # Allow this to fail
         run: |
           ersilia -v fetch ${{ github.event.repository.name }} --from_dockerhub
@@ -120,80 +99,14 @@ jobs:
           rm output.csv
         env:
           PULL_IMAGE: n
-        if: steps.buildForTestV2.outcome == 'success'
-        
-# If the test failed build a V1 image and test it with ersilia CLI
-
-      - name: Generate the V1 Dockerfile
-        id: generateDockerfileV1
-        if: steps.testBuiltImageV2.outcome == 'failure' || steps.testBuiltImageV2.outcome == 'skipped'
-        env:
-          REPO_NAME: ${{ github.event.repository.name }}
-        run: |
-          rm Dockerfile # Remove the V2 Dockerfile
-          wget https://raw.githubusercontent.com/ersilia-os/ersilia/master/.github/scripts/place_a_dockerfile_in_current_eos_repo.py
-          python -m pip install requests
-          python place_a_dockerfile_in_current_eos_repo.py $REPO_NAME v1
-          rm place_a_dockerfile_in_current_eos_repo.py
-
-      # We cannot tag it as anything other than latest because 
-      # ersilia cli only looks for the 'latest' tag
-      - name: Build only V1 AMD64 Image for Testing
-        id: buildForTestV1
-        if: steps.testBuiltImageV2.outcome == 'failure'
-        uses: docker/build-push-action@v5
-        with:
-          context: .
-          load: true
-          tags: ersiliaos/${{ github.event.repository.name }}:latest
-          
-      # TODO This is very hacky, maybe we want to use the ersilia test command in the future for this
-      - name: Test built v1 image
-        if: steps.testBuiltImageV2.outcome == 'failure'
-        id: testBuiltImageV1
-        run: |
-          ersilia -v fetch ${{ github.event.repository.name }} --from_dockerhub
-          ersilia -v serve ${{ github.event.repository.name }}
-          ersilia example -n 1 -f input.csv --predefined
-          ersilia -v run -i "input.csv" -o "output.csv"
-          ersilia close
-          output=$(python .github/scripts/verify_model_outcome.py output.csv)
-          if echo "$output" | grep -q "All outcomes are null"; then
-            echo "Error in model outcome, aborting build"
-            exit 1
-          fi
-          rm output.csv
-        env:
-          PULL_IMAGE: n
-
-# Create an issue to track that this model did not work with the V2 image
-
-      - name: Check for existing issue
-        id: check_existing_alert_issue
-        run: |
-          gh auth login --with-token <<< ${{ secrets.GITHUB_TOKEN }}
-          issue_number=$(gh issue list --limit 100 --search "${{ vars.DOCKER_BUILD_FAILURE_ISSUE_TITLE }}" --json number --jq '.[0].number')
-          echo "::set-output name=issue_number::$issue_number"
-        if: steps.testBuiltImageV1.conclusion != 'skipped'
-
-      - name: Create an alert issue
-        uses: actions-ecosystem/action-create-issue@b63bc2bbacb6a838dfe4a9f70da6665ae0962a49
-        id: create_alert_issue 
-        with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          title: ${{ vars.DOCKER_BUILD_FAILURE_ISSUE_TITLE }}
-          body: |
-            This model failed to build with v2 image. Please investigate and fix the issue.
-          labels: |
-            bug
-        if: ${{ (steps.check_existing_alert_issue.conclusion != 'skipped') && (steps.check_existing_alert_issue.outputs.issue_number == '') }}
+        if: steps.buildForTest.outcome == 'success'
 
 # Finally build and push if everything is successful
 
       - name: Build and push
         id: buildMultiple
         continue-on-error: true
-        uses: docker/build-push-action@v5
+        uses: docker/build-push-action@v6.7.0
         timeout-minutes: 45
         with:
           context: .
@@ -222,22 +135,22 @@ jobs:
           push: ${{ github.event_name != 'pull_request' }}
           tags: ersiliaos/${{ github.event.repository.name }}:latest
 
-      - name: Update Metadata JSON file with DockerHub info
+      - name: Update Metadata YAML file with DockerHub info
         id: updateMetadata
         run: |
           mv Dockerfile_legacy Dockerfile
           python3 -c "
-          import json
-          with open('metadata.json', 'r') as f:
-             data = json.load(f)
+          import yaml
+          with open('metadata.yml', 'r') as f:
+             data = yaml.safe_load(f)
           print(data)
           with open('arch.txt', 'r') as f:
              arch = f.read().rstrip()
              arch = arch.split(',')
           data['DockerHub'] = 'https://hub.docker.com/r/ersiliaos/{0}'.format(data['Identifier'])
           data['Docker Architecture'] = arch
-          with open('metadata.json', 'w') as f:
-             json.dump(data, f, indent=4)
+          with open('metadata.yml', 'w') as f:
+             yaml.dump(data, default_flow_style=False, sort_keys=False)
           "
           rm arch.txt
           
