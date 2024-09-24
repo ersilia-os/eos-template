@@ -236,7 +236,14 @@ jobs:
           assignees: |
             ${{ steps.shuffle.outputs.shuffled_assignee }}
           body: |
-            This model is ready for testing. If you are assigned to this issue, please try it out using the CLI, Google Colab and DockerHub and let us know if it works!
+            This model is a new incorporation to the Ersilia Model Hub or it has been modified. If you are assigned to this issue, please try it out and ensure everything works!
+            To test a model, first clone it in your local system (ideally, from dockerhub) using the CLI commands:
+            ```
+            ersilia -v fetch eosxxxx --from_dockerhub
+            ersilia serve eosxxxx
+            ersilia test
+            ```
+            The test command will automatically check that the model can handle null outputs and whether it produces consistent results. Please copy here the result of the test command. If it passes, simply close the issue as completed. If it fails, please detail at which step and whether you have taken any steps to solve it. Please tag the original model contributor and one of Ersilia's maintainers for support.
           labels: |
             test
         if: steps.check_existing_test_issue.outputs.issue_number == ''
