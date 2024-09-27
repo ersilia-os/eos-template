@@ -25,9 +25,9 @@ def resolve_python_version(parser):
 
 def read_dockerfile(parser):
     if isinstance(parser, DockerfileInstallParser):
-        file_url = "https://raw.githubusercontent.com/ersilia-os/ersilia/refs/heads/master/dockerfiles/dockerize-ersiliapack/model/Dockerfile.conda"
+        file_url = "https://raw.githubusercontent.com/ersilia-os/ersilia/master/dockerfiles/dockerize-ersiliapack/model/Dockerfile.conda"
     elif isinstance(parser, YAMLInstallParser):
-        file_url = "https://raw.githubusercontent.com/ersilia-os/ersilia/refs/heads/master/dockerfiles/dockerize-ersiliapack/model/Dockerfile.conda"
+        file_url = "https://raw.githubusercontent.com/ersilia-os/ersilia/master/dockerfiles/dockerize-ersiliapack/model/Dockerfile.pip"
     else:
         raise ValueError("Invalid parser type")
     response = requests.get(file_url)

@@ -1,0 +1,129 @@
+name: Upload Ersilia Pack Dockerized Model
+
+on:
+  workflow_call:
+
+jobs:
+  build-ersilia-pack-image:
+    if: ${{ github.repository != 'ersilia-os/eos-template' && github.event.workflow_run.conclusion == 'success' }}
+    runs-on: ubuntu-latest
+    steps:
+      # https://github.com/docker/setup-qemu-action
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v3
+      
+      # https://github.com/docker/setup-buildx-action
+      - name: Set up Docker Buildx
+        id: buildx
+        uses: docker/setup-buildx-action@v3
+    
+      # log in to dockerhub
+      - name: Login to Docker Hub
+        if: github.event_name != 'pull_request'
+        uses: docker/login-action@v1
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_PASSWORD }}
+          
+      - name: Checkout persist credentials
+        uses: actions/checkout@master
+        with:
+          persist-credentials: false # otherwise, the token used is the GITHUB_TOKEN, instead of your personal token
+          fetch-depth: 0 # otherwise, you will failed to push refs to dest repo
+          lfs: 'true'
+
+      # This might stop working in the future, so we need to keep an eye on it
+      - name: Free Disk Space (Ubuntu)
+        uses: jlumbroso/free-disk-space@main
+        with:
+          # this might remove tools that are actually needed,
+          # if set to "true" but frees about 6 GB
+          tool-cache: true
+          
+          # all of these default to true, but feel free to set to
+          # "false" if necessary for your workflow
+          android: true
+          dotnet: true
+          haskell: true
+          large-packages: true
+          swap-storage: true
+      
+      # Install ersilia-pack, requests, and ersilia to test the built image with ersilia CLI
+      - name: Setup Python for Ersilia Pack
+        id: setupPythonForErsiliaPack
+        uses: actions/setup-python@f677139bbe7f9c59b41e40162b753c062f5d49a3
+        with:
+          python-version: '3.10'
+
+      - name: Install ersilia-pack and generate the right Dockerfile
+        run: |
+          python -m pip install git+https://github.com/ersilia-os/ersilia-pack.git
+          python -m pip install requests
+          python -m pip install git+https://github.com/ersilia-os/ersilia.git
+          python .github/scripts/resolve_dockerfile.py
+
+      - name: Build only AMD64 Image for Testing
+        id: buildForTestErsiliaPack
+        continue-on-error: true  # Allow this to fail;
+        uses: docker/build-push-action@v6.7.0
+        with:
+          context: .
+          load: true
+          tags: ersiliaos/${{ github.event.repository.name }}:latest
+
+      - name: Test built image
+        id: testBuiltImageErsiliaPack
+        if: steps.buildForTestErsiliaPack.outcome == 'success'
+        continue-on-error: true  # Allow this to fail
+        run: |
+          ersilia -v fetch ${{ github.event.repository.name }} --from_dockerhub
+          ersilia -v serve ${{ github.event.repository.name }}
+          ersilia example -n 1 -f input.csv --predefined
+          ersilia -v run -i "input.csv" -o "output.csv"
+          ersilia close
+          output=$(python .github/scripts/verify_model_outcome.py output.csv)
+          if echo "$output" | grep -q "All outcomes are null"; then
+            echo "Error in model outcome, aborting build"
+            exit 1
+          fi
+          rm output.csv
+        env:
+          PULL_IMAGE: n
+
+      - name: Build and push
+        id: buildMultiple
+        continue-on-error: true
+        uses: docker/build-push-action@v6.7.0
+        timeout-minutes: 45
+        with:
+          context: .
+          platforms: linux/amd64,linux/arm64
+          push: ${{ github.event_name != 'pull_request' }}
+          tags: ersiliaos/${{ github.event.repository.name }}:latest
+          
+      - name: Set build failure output
+        id: buildCheck
+        run: |
+          if [[ "${{ steps.buildMultiple.outcome }}" == "failure" ]]; then
+            echo "::set-output name=failed::true"
+            echo "AMD64" > arch.txt 
+          else
+            echo "::set-output name=failed::false"
+            echo "AMD64,ARM64" > arch.txt
+          fi
+      
+      - name: Upload arch.txt
+      uses: actions/upload-artifact@v2
+      with:
+        name: arch
+        path: arch.txt
+        
+      - name: Build only for Linux/amd64
+        id: buildSingle
+        if: steps.buildCheck.outputs.failed == 'true'
+        uses: docker/build-push-action@v6.7.0
+        with:
+          context: .
+          platforms: linux/amd64
+          push: ${{ github.event_name != 'pull_request' }}
+          tags: ersiliaos/${{ github.event.repository.name }}:latest
