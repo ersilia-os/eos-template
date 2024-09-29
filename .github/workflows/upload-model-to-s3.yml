@@ -45,8 +45,18 @@ jobs:
           conda init
           python -m pip install git+https://github.com/ersilia-os/ersilia.git
                   
+      - name: Check metadata file
+        id: checkMetadata
+        continue-on-error: true
+        run: |
+          if [[ ! -f metadata.yml ]]; then
+            echo "metadata.yml file not found"
+            exit 1
+          fi
+
       - name: Update Metadata JSON file with DockerHub info
-        id: UpdateMetadata
+        if: steps.checkMetadata.outcome == 'failure'
+        id: UpdateMetadataJSON
         run: |
           python3 -c "
           import json
@@ -55,6 +65,19 @@ jobs:
           data['S3'] = 'https://ersilia-models-zipped.s3.eu-central-1.amazonaws.com/{0}.zip'.format(data['Identifier'])
           with open('metadata.json', 'w') as f:
              json.dump(data, f, indent=4)
+          "
+
+      - name: Update Metadata YAML file with DockerHub info
+        if: steps.checkMetadata.outcome == 'success'
+        id: UpdateMetadataYAML
+        run: |
+          python3 -c "
+          import yaml
+          with open('metadata.yml', 'r') as f:
+             data = yaml.safe_load(f)
+          data['S3'] = 'https://ersilia-models-zipped.s3.eu-central-1.amazonaws.com/{0}.zip'.format(data['Identifier'])
+          with open('metadata.yml', 'w') as f:
+             yaml.dump(data, f, default_flow_style=False, sort_keys=False)
           "
           
       - name: Commit and push changes done to the Metadata JSON file

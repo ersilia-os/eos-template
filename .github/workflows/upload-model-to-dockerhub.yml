@@ -1,10 +1,10 @@
 name: Upload model to DockerHub
 on:
   workflow_dispatch:
-  # workflow_run:
-  #   workflows: ["Upload model to S3"]
-  #   types:
-  #     - completed
+  workflow_run:
+    workflows: ["Upload model to S3"]
+    types:
+      - completed
   
 jobs:
   upload-ersilia-pack:

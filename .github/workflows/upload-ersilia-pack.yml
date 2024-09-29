@@ -11,13 +11,6 @@ jobs:
     
       - name: Checkout repository
         uses: actions/checkout@v4
-
-      - name: Check if we can use this workflow
-        run: |
-          if [[ -f install.yml ]]; then
-            echo "This workflow is not supported for this repository"
-            exit 1
-          fi
       
       # https://github.com/docker/setup-qemu-action
       - name: Set up QEMU
@@ -36,21 +29,21 @@ jobs:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_PASSWORD }}
       
-      # # This might stop working in the future, so we need to keep an eye on it
-      # - name: Free Disk Space (Ubuntu)
-      #   uses: jlumbroso/free-disk-space@main
-      #   with:
-      #     # this might remove tools that are actually needed,
-      #     # if set to "true" but frees about 6 GB
-      #     tool-cache: true
+      # This might stop working in the future, so we need to keep an eye on it
+      - name: Free Disk Space (Ubuntu)
+        uses: jlumbroso/free-disk-space@main
+        with:
+          # this might remove tools that are actually needed,
+          # if set to "true" but frees about 6 GB
+          tool-cache: true
           
-      #     # all of these default to true, but feel free to set to
-      #     # "false" if necessary for your workflow
-      #     android: true
-      #     dotnet: true
-      #     haskell: true
-      #     large-packages: true
-      #     swap-storage: true
+          # all of these default to true, but feel free to set to
+          # "false" if necessary for your workflow
+          android: true
+          dotnet: true
+          haskell: true
+          large-packages: true
+          swap-storage: true
       
       # Install ersilia-pack, requests, and ersilia to test the built image with ersilia CLI
       - name: Setup Python for Ersilia Pack

@@ -47,7 +47,7 @@ jobs:
           data['DockerHub'] = 'https://hub.docker.com/r/ersiliaos/{0}'.format(data['Identifier'])
           data['Docker Architecture'] = arch
           with open('metadata.yml', 'w') as f:
-            yaml.dump(data, default_flow_style=False, sort_keys=False)
+            yaml.dump(data, f, default_flow_style=False, sort_keys=False)
           "
           rm arch.txt
 
