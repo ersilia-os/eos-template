@@ -1,3 +1,4 @@
+import sys
 import os
 import requests
 
@@ -11,7 +12,7 @@ PY_VERSION_MAP = {
     '3.11': 'py311',
     '3.12': 'py312'
 }
-
+model_id = sys.argv[1]
 def resolve_parser():
     if os.path.exists(os.path.abspath(os.path.join(REPO_PATH, "Dockerfile"))):
         return DockerfileInstallParser(file_dir=REPO_PATH)
@@ -24,17 +25,18 @@ def resolve_python_version(parser):
     return parser._get_python_version()
 
 def read_dockerfile(parser):
-    if isinstance(parser, DockerfileInstallParser):
+    commands = parser._get_commands()
+    has_conda = parser._has_conda(commands)
+    if has_conda:
         file_url = "https://raw.githubusercontent.com/ersilia-os/ersilia/master/dockerfiles/dockerize-ersiliapack/model/Dockerfile.conda"
-    elif isinstance(parser, YAMLInstallParser):
-        file_url = "https://raw.githubusercontent.com/ersilia-os/ersilia/master/dockerfiles/dockerize-ersiliapack/model/Dockerfile.pip"
     else:
-        raise ValueError("Invalid parser type")
+        file_url = "https://raw.githubusercontent.com/ersilia-os/ersilia/master/dockerfiles/dockerize-ersiliapack/model/Dockerfile.pip"
     response = requests.get(file_url)
     return response.text
 
-def write_version(file_content, python_version):
+def write_version_and_model_id(file_content, python_version):
     python_version = PY_VERSION_MAP[python_version]
+    file_content = file_content.replace("eos_identifier", model_id)
     lines = file_content.split("\n")
     lines[0] = lines[0].replace("VERSION", python_version)
     with open(os.path.join(REPO_PATH, "../", "Dockerfile"), "w") as f:
@@ -44,4 +46,4 @@ if __name__ == "__main__":
     parser = resolve_parser()
     python_version = resolve_python_version(parser)
     dockerfile = read_dockerfile(parser)
-    write_version(dockerfile, python_version)
+    write_version_and_model_id(dockerfile, python_version)
