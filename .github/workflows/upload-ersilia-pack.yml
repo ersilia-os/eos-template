@@ -63,7 +63,6 @@ jobs:
 
       - name: Build only AMD64 Image for Testing
         id: buildForTestErsiliaPack
-        continue-on-error: true  # Allow this to fail;
         uses: docker/build-push-action@v6.7.0
         with:
           context: ../ # We need to go back to the root directory to find the Dockerfile and copy the model repository
@@ -75,7 +74,6 @@ jobs:
         env:
           PULL_IMAGE: n
         if: steps.buildForTestErsiliaPack.outcome == 'success'
-        continue-on-error: true  # Allow this to fail
         run: |
           ersilia -v fetch ${{ github.event.repository.name }} --from_dockerhub
           ersilia -v serve ${{ github.event.repository.name }}
