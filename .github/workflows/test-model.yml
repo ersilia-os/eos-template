@@ -112,7 +112,7 @@ jobs:
             echo "Sample model id selected: $MODEL_ID"
             ersilia -v fetch $MODEL_ID --repo_path .
             ersilia -v serve $MODEL_ID
-            ersilia sample -n 5 -f input.csv
+            ersilia example -n 5 -f input.csv --predefined
             ersilia -v run -i input.csv
             ersilia close
           
