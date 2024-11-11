@@ -11,7 +11,10 @@ jobs:
     
       - name: Checkout repository
         uses: actions/checkout@v4
-      
+        with:
+          lfs: true
+
+      - run: git lfs pull
       # https://github.com/docker/setup-qemu-action
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v3
