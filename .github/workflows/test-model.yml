@@ -100,22 +100,40 @@ jobs:
           amend: true
           force: true
       
-      - name: Predict output
+      - name: Fetch model
         env:
           MODEL_ID: ${{ github.event.repository.name }}
-        uses: nick-fields/retry@v3
-        with:
-          timeout_minutes: 10
-          max_attempts: 3
-          command: |
+        run: |
             source activate
-            echo "Sample model id selected: $MODEL_ID"
             ersilia -v fetch $MODEL_ID --repo_path .
-            ersilia -v serve $MODEL_ID
-            ersilia example -n 5 -f input.csv --predefined
-            ersilia -v run -i input.csv
-            ersilia close
+            FOLDER="$HOME/eos/repository/$MODEL_ID"
+            if [ ! -d "$FOLDER" ]; then
+              echo "Error: Folder '$FOLDER' does not exist." >&2
+              exit 1
+            fi
           
+      - name: Serve model
+        env:
+          MODEL_ID: ${{ github.event.repository.name }}
+        run: |
+            source activate
+            ersilia -v serve $MODEL_ID
+
+      - name: Test model
+        env:
+          MODEL_ID: ${{ github.event.repository.name }}
+        run: |
+            source activate
+            ersilia example -n 5 -f input.csv --predefined
+            ersilia -v run -i "input.csv" -o "output.csv"
+            ersilia close
+            output=$(python .github/scripts/verify_model_outcome.py output.csv)
+            if echo "$output" | grep -q "All outcomes are null"; then
+              echo "Error in model outcome, aborting test"
+              exit 1
+            fi
+            rm output.csv
+
       - name: Upload log output
         if: always()
         uses: actions/upload-artifact@83fd05a356d7e2593de66fc9913b3002723633cb #pin v3.1.1

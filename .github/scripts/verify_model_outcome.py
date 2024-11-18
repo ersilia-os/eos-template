@@ -6,7 +6,7 @@ def check_non_null_outcomes_in_output_csv(csv_file_path):
         header = next(csv_reader)
         row = next(csv_reader)
         for val in row[2:]: # Skip the first two columns (Inchikey and input)
-            if val not in ['', None]:
+            if val not in ['', None]: # Returns if even one outcome is not null
                 return False
     return True
 
