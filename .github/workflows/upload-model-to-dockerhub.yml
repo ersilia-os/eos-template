@@ -21,7 +21,7 @@ jobs:
 
   upload-legacy-bentoml:
     needs: [upload-multi-stage-condapack]
-    if: ${{ failure() }}
+    if: ${{ needs.upload-multi-stage-condapack.result == 'failure' }}
     uses: ./.github/workflows/upload-bentoml.yml
     secrets: inherit
     with:

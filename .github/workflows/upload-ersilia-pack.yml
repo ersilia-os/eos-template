@@ -11,7 +11,10 @@ jobs:
     
       - name: Checkout repository
         uses: actions/checkout@v4
-      
+        with:
+          lfs: true
+
+      - run: git lfs pull
       # https://github.com/docker/setup-qemu-action
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v3
@@ -63,7 +66,6 @@ jobs:
 
       - name: Build only AMD64 Image for Testing
         id: buildForTestErsiliaPack
-        continue-on-error: true  # Allow this to fail;
         uses: docker/build-push-action@v6.7.0
         with:
           context: ../ # We need to go back to the root directory to find the Dockerfile and copy the model repository
@@ -78,7 +80,6 @@ jobs:
           AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           AWS_DEFAULT_REGION: us-east-1
         if: steps.buildForTestErsiliaPack.outcome == 'success'
-        continue-on-error: true  # Allow this to fail
         run: |
           ersilia -v fetch ${{ github.event.repository.name }} --from_dockerhub
           ersilia -v serve ${{ github.event.repository.name }} --track #Added --track here
