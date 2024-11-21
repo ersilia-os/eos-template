@@ -1,4 +1,4 @@
-name: Model Test on push
+name: Model test on push
 
 on:
   push: 
