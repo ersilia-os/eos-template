@@ -105,7 +105,7 @@ jobs:
           MODEL_ID: ${{ github.event.repository.name }}
         run: |
             source activate
-            ersilia -v fetch $MODEL_ID --repo_path .
+            ersilia -v fetch $MODEL_ID --from_dir .
             FOLDER="$HOME/eos/repository/$MODEL_ID"
             if [ ! -d "$FOLDER" ]; then
               echo "Error: Folder '$FOLDER' does not exist." >&2
