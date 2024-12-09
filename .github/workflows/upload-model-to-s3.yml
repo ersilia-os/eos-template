@@ -101,10 +101,23 @@ jobs:
         run: |
           source activate
           echo "Updating metadata to AirTable looking at owner: $USER_NAME"
-          wget https://raw.githubusercontent.com/ersilia-os/ersilia/master/.github/scripts/update_metadata_to_airtable.py
-          python3 update_metadata_to_airtable.py $USER_NAME $REPO_NAME $BRANCH $AIRTABLE_API_KEY
-          rm update_metadata_to_airtable.py
-  
+          wget https://raw.githubusercontent.com/ersilia-os/ersilia/master/.github/scripts/airtableops.py
+          python3 airtableops.py airtable-update --user $USER_NAME --repo $REPO_NAME --branch $BRANCH --api-key $AIRTABLE_API_KEY
+          rm airtableops.py
+
+      - name: sync metadata to S3 JSON
+        id: sync-metadata-to-s3
+        env:
+          AIRTABLE_API_KEY: ${{ secrets.AIRTABLE_API_KEY }}
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        run: |
+          source activate
+          wget https://raw.githubusercontent.com/ersilia-os/ersilia/master/.github/scripts/convert_airtable_to_json.py
+          pip install boto3, requests, pyairtable
+          python .github/scripts/convert_airtable_to_json.py $AIRTABLE_API_KEY $AWS_ACCESS_KEY_ID $AWS_SECRET_ACCESS_KEY
+          rm convert_airtable_to_json.py
+          
       - name: Update README file
         id: update-readme-file
         env:
@@ -112,9 +125,9 @@ jobs:
         run: |
           source activate
           echo "Updating README file with AirTable metadata for model: $MODEL_ID"
-          wget https://raw.githubusercontent.com/ersilia-os/ersilia/master/.github/scripts/update_readme_from_airtable.py
-          python3 update_readme_from_airtable.py $MODEL_ID .
-          rm update_readme_from_airtable.py
+          wget https://raw.githubusercontent.com/ersilia-os/ersilia/master/.github/scripts/airtableops.py
+          python3 airtableops.py readme-update --repo $MODEL_ID --path .
+          rm airtableops.py
           less README.md
 
       - name: Commit and push changes done to the README file
