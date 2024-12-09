@@ -110,6 +110,19 @@ jobs:
           python3 airtableops.py airtable-update --user $USER_NAME --repo $REPO_NAME --branch $BRANCH --api-key $AIRTABLE_API_KEY
           rm airtableops.py
   
+      - name: sync metadata to S3 JSON
+        id: sync-metadata-to-s3
+        env:
+          AIRTABLE_API_KEY: ${{ secrets.AIRTABLE_API_KEY }}
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        run: |
+          source activate
+          wget https://raw.githubusercontent.com/ersilia-os/ersilia/master/.github/scripts/convert_airtable_to_json.py
+          pip install boto3, requests, pyairtable
+          python .github/scripts/convert_airtable_to_json.py $AIRTABLE_API_KEY $AWS_ACCESS_KEY_ID $AWS_SECRET_ACCESS_KEY
+          rm convert_airtable_to_json.py
+
       - name: Update README file
         id: update-readme-file
         env:
