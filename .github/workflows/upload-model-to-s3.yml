@@ -100,6 +100,7 @@ jobs:
           AIRTABLE_API_KEY: ${{ secrets.AIRTABLE_API_KEY }}
         run: |
           source activate
+          pip install requests pyairtable
           echo "Updating metadata to AirTable looking at owner: $USER_NAME"
           wget https://raw.githubusercontent.com/ersilia-os/ersilia/master/.github/scripts/airtableops.py
           python3 airtableops.py airtable-update --user $USER_NAME --repo $REPO_NAME --branch $BRANCH --api-key $AIRTABLE_API_KEY
