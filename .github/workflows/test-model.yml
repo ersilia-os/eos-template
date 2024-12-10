@@ -86,8 +86,8 @@ jobs:
         run: |
           source activate
           wget https://raw.githubusercontent.com/ersilia-os/ersilia/master/.github/scripts/convert_airtable_to_json.py
-          pip install boto3, requests, pyairtable
-          python .github/scripts/convert_airtable_to_json.py $AIRTABLE_API_KEY $AWS_ACCESS_KEY_ID $AWS_SECRET_ACCESS_KEY
+          pip install boto3 requests pyairtable
+          python convert_airtable_to_json.py $AIRTABLE_API_KEY $AWS_ACCESS_KEY_ID $AWS_SECRET_ACCESS_KEY
           rm convert_airtable_to_json.py
 
       - name: Update README file
@@ -131,7 +131,7 @@ jobs:
         run: |
             source activate
             ersilia -v serve $MODEL_ID
-            ersilia example -n 5 -f input.csv --predefined
+            ersilia example inputs -n 5 -f input.csv --predefined
             ersilia -v run -i "input.csv" -o "output.csv"
             ersilia close
             cat output.csv
