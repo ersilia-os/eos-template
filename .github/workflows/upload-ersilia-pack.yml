@@ -83,7 +83,7 @@ jobs:
         run: |
           ersilia -v fetch ${{ github.event.repository.name }} --from_dockerhub
           ersilia -v serve ${{ github.event.repository.name }} --track #Added --track here
-          ersilia example inputs -n 1 -f input.csv --predefined
+          ersilia example -n 1 -f input.csv --predefined
           ersilia -v run -i "input.csv" -o "output.csv" 
           ersilia close
           output=$(python .github/scripts/verify_model_outcome.py output.csv)
