@@ -116,13 +116,13 @@ jobs:
 
       # If test succeeds we tag the image with timestamp and latest
       - name: Get date
-        id: getDate
+        id: get-date
         env:
           DATE: ${{ github.run_started_at }} 
         run: |
           # Keep only the date part
           DATE=$(echo $DATE | cut -d 'T' -f 1)
-          echo "::set-output name=DATE::$DATE"
+          echo "date=$DATE" >> $GITHUB_OUTPUT
 
       - name: Build and push
         id: buildMultiple
@@ -136,7 +136,7 @@ jobs:
           push: ${{ github.event_name != 'pull_request' }}
           tags: |
             ersiliaos/${{ github.event.repository.name }}:latest
-            ersiliaos/${{ github.event.repository.name }}:${{ steps.getDate.outputs.DATE }}
+            ersiliaos/${{ github.event.repository.name }}:${{ steps.get-date.outputs.date }}
           
       - name: Set build failure output
         id: buildCheck
