@@ -84,7 +84,7 @@ jobs:
 
       # We cannot tag it as anything other than latest because 
       # ersilia cli only looks for the 'latest' tag
-      - name: Build only  AMD64 Image for Testing
+      - name: Build only AMD64 Image for Testing
         id: buildForTest
         uses: docker/build-push-action@v5
         with:
@@ -113,8 +113,40 @@ jobs:
           fi
           rm output.csv
 
+      # If test failed, we tag the image as dev
+      - name: Tag Dev image
+        id: tagDevImage
+        if: steps.testBuiltImage.outcome == 'failure'
+        run: |
+          docker tag ersiliaos/${{ github.event.repository.name }}:latest ersiliaos/${{ github.event.repository.name }}:dev
+          docker push ersiliaos/${{ github.event.repository.name }}:dev
+
+      - name: Create a Test issue
+        if: steps.testBuiltImage.outcome == 'failure'
+        uses: actions-ecosystem/action-create-issue@b63bc2bbacb6a838dfe4a9f70da6665ae0962a49
+        id: createFailureIssue
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          title: Failed model build
+          body: |
+            The model build failed. Please check the logs and fix the issue.
+            A dev image has been pushed to DockerHub for reference.
+          labels: |
+            bug
+
+      # If test succeeds we tag the image with timestamp and latest
+      - name: Get date
+        id: get-date
+        env:
+          DATE: ${{ github.run_started_at }} 
+        run: |
+          # Keep only the date part
+          DATE=$(echo $DATE | cut -d 'T' -f 1)
+          echo "date=$DATE" >> $GITHUB_OUTPUT
+
       - name: Build and push
         id: buildMultiple
+        if: steps.testBuiltImage.outcome == 'success'
         continue-on-error: true
         uses: docker/build-push-action@v6.7.0
         timeout-minutes: 45
@@ -122,7 +154,9 @@ jobs:
           context: .
           platforms: linux/amd64,linux/arm64
           push: ${{ github.event_name != 'pull_request' }}
-          tags: ersiliaos/${{ github.event.repository.name }}:latest
+          tags: |
+            ersiliaos/${{ github.event.repository.name }}:latest
+            ersiliaos/${{ github.event.repository.name }}:${{ steps.get-date.outputs.date }}
           
       - name: Set build failure output
         id: buildCheck
