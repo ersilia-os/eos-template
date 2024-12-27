@@ -1,6 +1,6 @@
 name: Model Test on PR
 
-on: 
+on:
   pull_request:
 
 jobs:
@@ -12,14 +12,14 @@ jobs:
         with:
           lfs: true
 
-# This might stop working in the future, so we need to keep an eye on it
+      # This might stop working in the future, so we need to keep an eye on it
       - name: Free Disk Space (Ubuntu)
         uses: jlumbroso/free-disk-space@main
         with:
           # this might remove tools that are actually needed,
           # if set to "true" but frees about 6 GB
           tool-cache: true
-          
+
           # all of these default to true, but feel free to set to
           # "false" if necessary for your workflow
           android: true
@@ -30,14 +30,13 @@ jobs:
 
       - name: Add conda to system path
         run: echo $CONDA/bin >> $GITHUB_PATH
-      
+
       - name: Source conda
         run: source $CONDA/etc/profile.d/conda.sh
-        
+
       - name: Set Python to 3.10.10
-        run:
-         conda install -y python=3.10.10 
-      
+        run: conda install -y python=3.10.10
+
       - name: Install dependencies
         run: |
           source activate
@@ -53,7 +52,7 @@ jobs:
           echo "After conda init"
           conda init
           python -m pip install git+https://github.com/ersilia-os/ersilia.git
-  
+
       - name: Predict output
         env:
           MODEL_ID: ${{ github.event.repository.name }}
@@ -67,9 +66,11 @@ jobs:
             ersilia -v fetch $MODEL_ID --from_dir .
             ersilia -v serve $MODEL_ID
             ersilia example -n 5 -f input.csv --predefined
-            ersilia -v api -i input.csv
+            ersilia -v run -i input.csv
             ersilia close
-          
+            echo "Perform detail check on model: $MODEL_ID"
+            ersilia -v test $MODEL_ID -d . --inspect -l deep
+
       - name: Upload log output
         if: always()
         uses: actions/upload-artifact@83fd05a356d7e2593de66fc9913b3002723633cb #pin v3.1.1

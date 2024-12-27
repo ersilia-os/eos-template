@@ -1,8 +1,8 @@
 name: Model test on push
 
 on:
-  push: 
-    branches: ['main']
+  push:
+    branches: ["main"]
   workflow_dispatch:
 
 jobs:
@@ -15,16 +15,16 @@ jobs:
         with:
           persist-credentials: false # otherwise, the token used is the GITHUB_TOKEN, instead of your personal token
           fetch-depth: 0 # otherwise, you will failed to push refs to dest repo
-          lfs: 'true'
-          
-# This might stop working in the future, so we need to keep an eye on it
+          lfs: "true"
+
+      # This might stop working in the future, so we need to keep an eye on it
       - name: Free Disk Space (Ubuntu)
         uses: jlumbroso/free-disk-space@main
         with:
           # this might remove tools that are actually needed,
           # if set to "true" but frees about 6 GB
           tool-cache: true
-          
+
           # all of these default to true, but feel free to set to
           # "false" if necessary for your workflow
           android: true
@@ -35,14 +35,13 @@ jobs:
 
       - name: Add conda to system path
         run: echo $CONDA/bin >> $GITHUB_PATH
-      
+
       - name: Source conda
         run: source $CONDA/etc/profile.d/conda.sh
 
       - name: Set Python to 3.10.10
-        run:
-         conda install -y python=3.10.10 
-         
+        run: conda install -y python=3.10.10
+
       - name: Install dependencies
         run: |
           source activate
@@ -58,7 +57,7 @@ jobs:
           echo "After conda init"
           conda init
           python -m pip install git+https://github.com/ersilia-os/ersilia.git
-  
+
       - name: Update metadata to AirTable
         id: update-metadata-to-airtable
         env:
@@ -113,38 +112,55 @@ jobs:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           amend: true
           force: true
-      
+
       - name: Fetch model
         env:
           MODEL_ID: ${{ github.event.repository.name }}
         run: |
-            source activate
-            ersilia -v fetch $MODEL_ID --from_dir .
-            FOLDER="$HOME/eos/repository/$MODEL_ID"
-            if [ ! -d "$FOLDER" ]; then
-              echo "Error: Folder '$FOLDER' does not exist." >&2
-              exit 1
-            fi
+          source activate
+          ersilia -v fetch $MODEL_ID --from_dir .
+          FOLDER="$HOME/eos/repository/$MODEL_ID"
+          if [ ! -d "$FOLDER" ]; then
+            echo "Error: Folder '$FOLDER' does not exist." >&2
+            exit 1
+          fi
 
       - name: Generate input and run model
         env:
           MODEL_ID: ${{ github.event.repository.name }}
         run: |
-            source activate
-            ersilia -v serve $MODEL_ID
-            ersilia example -n 5 -f input.csv --predefined
-            ersilia -v run -i "input.csv" -o "output.csv"
-            ersilia close
-            cat output.csv
-      
+          source activate
+          ersilia -v serve $MODEL_ID
+          ersilia example -n 5 -f input.csv --predefined
+          ersilia -v run -i "input.csv" -o "output.csv"
+          ersilia close
+          cat output.csv
+
       - name: Test output
         run: |
-            output=$(python .github/scripts/verify_model_outcome.py output.csv)
-            if echo "$output" | grep -q "All outcomes are null"; then
-              echo "Error in model outcome, aborting test"
-              exit 1
-            fi
-            rm output.csv
+          output=$(python .github/scripts/verify_model_outcome.py output.csv)
+          if echo "$output" | grep -q "All outcomes are null"; then
+            echo "Error in model outcome, aborting test"
+            exit 1
+          fi
+      
+      name: Upload output.csv
+        if: always()
+        uses: actions/upload-artifact@83fd05a356d7e2593de66fc9913b3002723633cb #pin v3.1.1
+        with:
+          name: model-output
+          retention-days: 14
+          path: output.csv
+
+      - run: rm output.csv
+
+      - name: Perform detail check on model
+        env:
+          MODEL_ID: ${{ github.event.repository.name }}
+        run: |
+          source activate
+          ersilia delete $MODEL_ID
+          ersilia -v test $MODEL_ID -d $MODEL_ID --inspect --remote -l deep
 
       - name: Upload log output
         if: always()
