@@ -134,7 +134,6 @@ jobs:
           ersilia example -n 5 -f input.csv --predefined
           ersilia -v run -i "input.csv" -o "output.csv"
           ersilia close
-          cat output.csv
 
       - name: Test output
         run: |
@@ -143,7 +142,16 @@ jobs:
             echo "Error in model outcome, aborting test"
             exit 1
           fi
-          rm output.csv
+      
+      - name: Upload output.csv
+        if: always()
+        uses: actions/upload-artifact@83fd05a356d7e2593de66fc9913b3002723633cb #pin v3.1.1
+        with:
+          name: model-output
+          retention-days: 14
+          path: output.csv
+
+      - run: rm output.csv
 
       - name: Perform detail check on model
         env:
