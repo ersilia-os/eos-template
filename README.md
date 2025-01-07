@@ -47,4 +47,11 @@ A bash script within the `model/framework` directory is interepreted by Ersilia 
 
 ## Adding Example Input and Output
 
-It is always helpful to provide an example input and output while contributing a model to ease the verification of the model's working. To ensure all models always have an example, Ersilia checks for example CSV files in the `model/framework/examples` directory. In particular, Ersilia looks for `input.csv`, and `output.csv` files in this folder. These files are used to generate the necessary API end points for building a model server and therefore must always be provided.
+It is always helpful to provide an example input and output file while contributing a model to ease the verification of the model's working. To ensure all models always have an example, Ersilia checks for example CSV files in the `model/framework/examples` directory.
+
+Ersilia now expects example files to follow a prefix-based naming convention to indicate the corresponding API. The example input and output files must be named as follows:
+
+- `<prefix>_input.csv` for example input data
+- `<prefix>_output.csv` for example output data
+
+For instance, if the API prefix is run, the files should be named `run_input.csv` and `run_output.csv`, These files are used to generate the necessary API end points for building a model server and therefore must always be provided.
