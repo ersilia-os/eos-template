@@ -71,6 +71,16 @@ jobs:
             echo "Perform detail check on model: $MODEL_ID"
             ersilia -v test $MODEL_ID -d . --inspect -l deep
 
+      
+      - name: Remove mock.txt if it exists
+        run: |
+          if [ -f "mock.txt" ]; then
+            echo "Removing mock.txt file"
+            rm "mock.txt"
+          else
+            echo "mock.txt not found, skipping removal"
+          fi
+
       - name: Upload log output
         if: always()
         uses: actions/upload-artifact@83fd05a356d7e2593de66fc9913b3002723633cb #pin v3.1.1
