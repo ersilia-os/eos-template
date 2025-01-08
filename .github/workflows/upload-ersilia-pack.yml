@@ -75,4 +75,4 @@ jobs:
           platforms: linux/amd64,linux/arm64
           push: ${{ github.event_name != 'pull_request' }}
           tags: |
-            ersiliaos/${{ github.event.repository.name }}:ersilia-pack-dev
+            ersiliaos/${{ github.event.repository.name }}:dev

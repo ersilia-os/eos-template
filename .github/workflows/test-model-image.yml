@@ -77,3 +77,27 @@ jobs:
           path: |
             *.txt
 
+  retag-image:
+    if: ${{ github.repository != 'ersilia-os/eos-template' }}
+    needs: test-image
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download architecture information
+        uses: actions/download-artifact@v3
+        with:
+          name: build-logs
+      
+      # If either amd.txt or arm.txt files exist, we tag the image with date and as latest
+      - name: Check architecture information
+        env:
+          MODEL: ${{ github.event.repository.name }}
+        run: |
+            if [[ -f amd.txt || -f arm.txt ]]; then
+              echo "Tagging image with date and as latest"
+              docker tag ersiliaos/$MODEL:dev ersiliaos/$MODEL:$(date +%Y-%m-%d)
+              docker tag ersiliaos/$MODEL:dev ersiliaos/$MODEL:latest
+              docker push ersiliaos/$MODEL:$(date +%Y-%m-%d) && docker push ersiliaos/$MODEL:latest
+            else
+              echo "Image test failed, keeping the dev tag"
+              exit 1
+            fi
