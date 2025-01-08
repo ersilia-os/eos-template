@@ -13,16 +13,12 @@ jobs:
     secrets: inherit
 
   upload-multi-stage-condapack:
-    needs: [upload-ersilia-pack]
-    if: ${{ failure() }}
     uses: ./.github/workflows/upload-bentoml.yml
     secrets: inherit
     with:
       version: multistage-condapack
 
   upload-legacy-bentoml:
-    needs: [upload-multi-stage-condapack]
-    if: ${{ failure() }}
     uses: ./.github/workflows/upload-bentoml.yml
     secrets: inherit
     with:
