@@ -1,5 +1,4 @@
 # This workflow tests the model on the main branch
-# TODO(@dhanshree): Test ersilia in all supported Python versions
 name: Model test on push
 
 on:
@@ -12,7 +11,7 @@ jobs:
     if: github.repository != 'ersilia-os/eos-template'
     runs-on: ubuntu-latest
     steps:
-      # This might stop working in the future, so we need to keep an eye on it
+    # This might stop working in the future, so we need to keep an eye on it
       - name: Free Disk Space (Ubuntu)
         uses: jlumbroso/free-disk-space@main
         with:
@@ -34,14 +33,15 @@ jobs:
       - uses: conda-incubator/setup-miniconda@v3
         with:
           auto-update-conda: true
-          python-version: "3.10.10"
+          python-version: "3.12"
+          auto-activate-base: true
 
       - name: Install dependencies
         run: |
           conda install git-lfs -c conda-forge
           git-lfs install
           conda install gh -c conda-forge
-          python -m pip install 'ersilia[test]'
+          python -m pip install 'git+https://github.com/ersilia-os/ersilia.git#egg=ersilia[test]'
 
       - name: Update metadata to AirTable
         id: update-metadata-to-airtable
@@ -62,14 +62,13 @@ jobs:
             python3 airtableops.py airtable-update --user $USER_NAME --repo $REPO_NAME --branch $BRANCH --api-key $AIRTABLE_API_KEY
             rm airtableops.py
 
-      - name: sync metadata to S3 JSON
+      - name: Sync metadata to S3 JSON
         id: sync-metadata-to-s3
         env:
           AIRTABLE_API_KEY: ${{ secrets.AIRTABLE_API_KEY }}
           AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY }}
           AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
         run: |
-          source activate
           wget https://raw.githubusercontent.com/ersilia-os/ersilia/master/.github/scripts/convert_airtable_to_json.py
           pip install boto3 requests pyairtable
           python convert_airtable_to_json.py $AIRTABLE_API_KEY $AWS_ACCESS_KEY_ID $AWS_SECRET_ACCESS_KEY
@@ -80,7 +79,6 @@ jobs:
         env:
           MODEL_ID: ${{ github.event.repository.name }}
         run: |
-          source activate
           echo "Updating README file with AirTable metadata for model: $MODEL_ID"
           wget https://raw.githubusercontent.com/ersilia-os/ersilia/master/.github/scripts/airtableops.py
           python3 airtableops.py readme-update --repo $MODEL_ID --path .
@@ -98,13 +96,24 @@ jobs:
           amend: true
           force: true
 
-      # TODO(@dhanshree) We can potentially restore the retries.
-      # TODO(@dhanshree) Correct the test command as needed
-      - name: Test model
+      - name: Fetch model and run it simply
         env:
           MODEL_ID: ${{ github.event.repository.name }}
         run: |
-          ersilia -v test $MODEL_ID --from_dir . --shallow > test.log
+          ersilia -v fetch $MODEL_ID --from_github
+          ersilia serve $MODEL_ID
+          ersilia example -f input.csv -n 3
+          ersilia run -i input.csv -o output.csv
+          ersilia close
+          ersilia delete $MODEL_ID
+          head output.csv
+
+      # TODO(@dhanshree) We can potentially restore the retries.
+      # - name: Test model
+      #  env:
+      #    MODEL_ID: ${{ github.event.repository.name }}
+      #  run: |
+      #    ersilia -v test $MODEL_ID --from_github --shallow > test.log
 
       # Upload EOS logs and test logs
       - name: Upload log output

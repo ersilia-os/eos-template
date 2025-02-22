@@ -53,7 +53,7 @@ jobs:
         id: setupPythonForErsiliaPack
         uses: actions/setup-python@f677139bbe7f9c59b41e40162b753c062f5d49a3
         with:
-          python-version: '3.10'
+          python-version: '3.12'
 
       - name: Install ersilia-pack and generate the right Dockerfile
         env:
@@ -66,7 +66,6 @@ jobs:
 
       - name: Build and push
         id: buildMultiple
-        if: steps.testBuiltImageErsiliaPack.outcome == 'success'
         continue-on-error: true
         uses: docker/build-push-action@v6.7.0
         timeout-minutes: 60

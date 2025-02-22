@@ -4,9 +4,10 @@ on:
     workflows: ["Upload model to S3"]
     types:
       - completed
-  
+      
 jobs:
   upload-ersilia-pack:
+    if: ${{ github.event.workflow_run.conclusion == 'success' }}
     uses: ./.github/workflows/upload-ersilia-pack.yml
     secrets: inherit
 

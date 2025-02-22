@@ -21,14 +21,15 @@ jobs:
       - uses: conda-incubator/setup-miniconda@v3
         with:
           auto-update-conda: true
-          python-version: "3.10.10"
+          python-version: "3.12"
+          auto-activate-base: true
       
       - name: Install dependencies
         run: |
           conda install git-lfs -c conda-forge
           git-lfs install
           conda install gh -c conda-forge
-          python -m pip install ersilia
+          python -m pip install git+https://github.com/ersilia-os/ersilia.git
 
 # Here we check if a metadata.yml file exists or a metadata.json file exists
 # If metadata.yml file does not exist, we update metadata.json file
@@ -87,7 +88,6 @@ jobs:
           REPO_NAME: ${{ github.event.repository.name }}
           AIRTABLE_API_KEY: ${{ secrets.AIRTABLE_API_KEY }}
         run: |
-          source activate
           pip install requests pyairtable
           echo "Updating metadata to AirTable looking at owner: $USER_NAME"
           wget https://raw.githubusercontent.com/ersilia-os/ersilia/master/.github/scripts/airtableops.py
@@ -101,7 +101,6 @@ jobs:
           AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY }}
           AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
         run: |
-          source activate
           wget https://raw.githubusercontent.com/ersilia-os/ersilia/master/.github/scripts/convert_airtable_to_json.py
           pip install boto3 requests pyairtable
           python convert_airtable_to_json.py $AIRTABLE_API_KEY $AWS_ACCESS_KEY_ID $AWS_SECRET_ACCESS_KEY
@@ -112,7 +111,6 @@ jobs:
         env:
           MODEL_ID: ${{ github.event.repository.name }}
         run: |
-          source activate
           echo "Updating README file with AirTable metadata for model: $MODEL_ID"
           wget https://raw.githubusercontent.com/ersilia-os/ersilia/master/.github/scripts/airtableops.py
           python3 airtableops.py readme-update --repo $MODEL_ID --path .
@@ -137,7 +135,6 @@ jobs:
           AWS_ACCESS_KEY: ${{ secrets.AWS_ACCESS_KEY }}
           AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
         run: |
-          source activate
           echo "Uploading model to S3 bucket"
           wget https://raw.githubusercontent.com/ersilia-os/ersilia/master/.github/scripts/upload_model_to_s3.py
           python3 upload_model_to_s3.py $REPO_NAME $AWS_ACCESS_KEY $AWS_SECRET_ACCESS_KEY .
