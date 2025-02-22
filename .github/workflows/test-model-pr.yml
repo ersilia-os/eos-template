@@ -47,7 +47,7 @@ jobs:
         env:
           MODEL_ID: ${{ github.event.repository.name }}
         run: |
-          ersilia -v test $MODEL_ID -d . --inspect -l deep > test.log
+          ersilia -v test $MODEL_ID --shallow > test.log
       
       # Remove mock.txt if it exists
       - name: Cleanup

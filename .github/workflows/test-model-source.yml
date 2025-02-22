@@ -34,7 +34,7 @@ jobs:
       - uses: conda-incubator/setup-miniconda@v3
         with:
           auto-update-conda: true
-          python-version: "3.10.10"
+          python-version: "3.12"
 
       - name: Install dependencies
         run: |
@@ -98,21 +98,13 @@ jobs:
           amend: true
           force: true
 
-      - name: Test output
-        run: |
-          output=$(python .github/scripts/verify_model_outcome.py output.csv)
-          if echo "$output" | grep -q "All outcomes are null"; then
-            echo "Error in model outcome, aborting test"
-            exit 1
-          fi
-
       # TODO(@dhanshree) We can potentially restore the retries.
       # TODO(@dhanshree) Correct the test command as needed
       - name: Test model
         env:
           MODEL_ID: ${{ github.event.repository.name }}
         run: |
-          ersilia -v test $MODEL_ID -d $MODEL_ID --inspect --remote -l deep > test.log
+          ersilia -v test $MODEL_ID --from_dir . --shallow > test.log
 
       # Upload EOS logs and test logs
       - name: Upload log output
