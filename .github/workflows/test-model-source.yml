@@ -1,3 +1,5 @@
+# This workflow tests the model on the main branch
+# TODO(@dhanshree): Test ersilia in all supported Python versions
 name: Model test on push
 
 on:
@@ -10,13 +12,6 @@ jobs:
     if: github.repository != 'ersilia-os/eos-template'
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout persist credentials
-        uses: actions/checkout@8e5e7e5ab8b370d6c329ec480221332ada57f0ab # pin@v3.5.2
-        with:
-          persist-credentials: false # otherwise, the token used is the GITHUB_TOKEN, instead of your personal token
-          fetch-depth: 0 # otherwise, you will failed to push refs to dest repo
-          lfs: "true"
-
       # This might stop working in the future, so we need to keep an eye on it
       - name: Free Disk Space (Ubuntu)
         uses: jlumbroso/free-disk-space@main
@@ -33,30 +28,20 @@ jobs:
           large-packages: true
           swap-storage: true
 
-      - name: Add conda to system path
-        run: echo $CONDA/bin >> $GITHUB_PATH
-
-      - name: Source conda
-        run: source $CONDA/etc/profile.d/conda.sh
-
-      - name: Set Python to 3.10.10
-        run: conda install -y python=3.10.10
+      - uses: actions/checkout@v4.2.2
+        with:
+          lfs: true
+      - uses: conda-incubator/setup-miniconda@v3
+        with:
+          auto-update-conda: true
+          python-version: "3.10.10"
 
       - name: Install dependencies
         run: |
-          source activate
-          conda init
           conda install git-lfs -c conda-forge
           git-lfs install
           conda install gh -c conda-forge
-
-      - name: Install ersilia
-        run: |
-          source activate
-          python --version
-          echo "After conda init"
-          conda init
-          python -m pip install git+https://github.com/ersilia-os/ersilia.git
+          python -m pip install 'ersilia[test]'
 
       - name: Update metadata to AirTable
         id: update-metadata-to-airtable
@@ -113,28 +98,6 @@ jobs:
           amend: true
           force: true
 
-      - name: Fetch model
-        env:
-          MODEL_ID: ${{ github.event.repository.name }}
-        run: |
-          source activate
-          ersilia -v fetch $MODEL_ID --from_dir .
-          FOLDER="$HOME/eos/repository/$MODEL_ID"
-          if [ ! -d "$FOLDER" ]; then
-            echo "Error: Folder '$FOLDER' does not exist." >&2
-            exit 1
-          fi
-
-      - name: Generate input and run model
-        env:
-          MODEL_ID: ${{ github.event.repository.name }}
-        run: |
-          source activate
-          ersilia -v serve $MODEL_ID
-          ersilia example -n 5 -f input.csv --predefined
-          ersilia -v run -i "input.csv" -o "output.csv"
-          ersilia close
-
       - name: Test output
         run: |
           output=$(python .github/scripts/verify_model_outcome.py output.csv)
@@ -142,29 +105,22 @@ jobs:
             echo "Error in model outcome, aborting test"
             exit 1
           fi
-      
-      - name: Upload output.csv
-        if: always()
-        uses: actions/upload-artifact@83fd05a356d7e2593de66fc9913b3002723633cb #pin v3.1.1
-        with:
-          name: model-output
-          retention-days: 14
-          path: output.csv
 
-      - run: rm output.csv
-
-      - name: Perform detail check on model
+      # TODO(@dhanshree) We can potentially restore the retries.
+      # TODO(@dhanshree) Correct the test command as needed
+      - name: Test model
         env:
           MODEL_ID: ${{ github.event.repository.name }}
         run: |
-          source activate
-          ersilia delete $MODEL_ID
-          ersilia -v test $MODEL_ID -d $MODEL_ID --inspect --remote -l deep
+          ersilia -v test $MODEL_ID -d $MODEL_ID --inspect --remote -l deep > test.log
 
+      # Upload EOS logs and test logs
       - name: Upload log output
         if: always()
         uses: actions/upload-artifact@83fd05a356d7e2593de66fc9913b3002723633cb #pin v3.1.1
         with:
           name: debug-logs
           retention-days: 14
-          path: /home/runner/eos/*.log
+          path: |
+          /home/runner/eos/*.log
+          ./*.log

@@ -12,39 +12,27 @@ jobs:
     if: ${{ github.repository != 'ersilia-os/eos-template' && github.event.workflow_run.conclusion == 'success' }}
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout persist credentials
-        uses: actions/checkout@master
+      - uses: actions/checkout@v4.2.2
         with:
           persist-credentials: false # otherwise, the token used is the GITHUB_TOKEN, instead of your personal token
           fetch-depth: 0 # otherwise, you will failed to push refs to dest repo
           lfs: 'true'
-            
-      - name: Add conda to system path
-        run: echo $CONDA/bin >> $GITHUB_PATH
-      
-      - name: Source conda
-        run: source $CONDA/etc/profile.d/conda.sh
 
-      - name: Set Python to 3.10.10
-        run:
-         conda install -y python=3.10.10 
+      - uses: conda-incubator/setup-miniconda@v3
+        with:
+          auto-update-conda: true
+          python-version: "3.10.10"
       
       - name: Install dependencies
         run: |
-          source activate
-          conda init
           conda install git-lfs -c conda-forge
           git-lfs install
           conda install gh -c conda-forge
-          
-      - name: Install ersilia
-        run: |
-          source activate
-          python --version
-          echo "After conda init"
-          conda init
-          python -m pip install git+https://github.com/ersilia-os/ersilia.git
-                  
+          python -m pip install ersilia
+
+# Here we check if a metadata.yml file exists or a metadata.json file exists
+# If metadata.yml file does not exist, we update metadata.json file
+
       - name: Check metadata file
         id: checkMetadata
         continue-on-error: true
@@ -54,7 +42,7 @@ jobs:
             exit 1
           fi
 
-      - name: Update Metadata JSON file with DockerHub info
+      - name: Update Metadata JSON file with S3 info
         if: steps.checkMetadata.outcome == 'failure'
         id: UpdateMetadataJSON
         run: |
@@ -67,7 +55,7 @@ jobs:
              json.dump(data, f, indent=4)
           "
 
-      - name: Update Metadata YAML file with DockerHub info
+      - name: Update Metadata YAML file with S3 info
         if: steps.checkMetadata.outcome == 'success'
         id: UpdateMetadataYAML
         run: |
