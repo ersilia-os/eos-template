@@ -67,5 +67,5 @@ jobs:
           name: debug-logs
           retention-days: 14
           path: |
-          /home/runner/eos/*.log
-          ./*.log
+            /home/runner/eos/*.log
+            ./*.log
