@@ -1,71 +1,14 @@
-# This workflow only tests the model on PRs, not on every push to the main branch.
-# TODO(@dhanshree): Test ersilia in all supported Python versions
-name: Model Test on PR
+name: Test and upload model on PR
 
 on:
   pull_request:
+    branches:
+      - main
 
 jobs:
-  test:
+  test-model-pr:
     if: github.repository != 'ersilia-os/eos-template'
-    runs-on: ubuntu-latest
-    steps:
-      # This might stop working in the future, so we need to keep an eye on it
-      - name: Free Disk Space (Ubuntu)
-        uses: jlumbroso/free-disk-space@main
-        with:
-          # this might remove tools that are actually needed,
-          # if set to "true" but frees about 6 GB
-          tool-cache: true
-
-          # all of these default to true, but feel free to set to
-          # "false" if necessary for your workflow
-          android: true
-          dotnet: true
-          haskell: true
-          large-packages: true
-          swap-storage: true
-
-      - uses: actions/checkout@v4.2.2
-        with:
-          lfs: true
-      - uses: conda-incubator/setup-miniconda@v3
-        with:
-          auto-update-conda: true
-          python-version: "3.10.10"
-
-      - name: Install dependencies
-        run: |
-          conda install git-lfs -c conda-forge
-          git-lfs install
-          conda install gh -c conda-forge
-          python -m pip install 'ersilia[test]'
-
-      # TODO(@dhanshree) We can potentially restore the retries.
-      # TODO(@dhanshree) Correct the test command as needed
-      - name: Test model
-        env:
-          MODEL_ID: ${{ github.event.repository.name }}
-        run: |
-          ersilia -v test $MODEL_ID --shallow > test.log
-      
-      # Remove mock.txt if it exists
-      - name: Cleanup
-        run: |
-          if [ -f "mock.txt" ]; then
-            echo "Removing mock.txt file"
-            rm "mock.txt"
-          else
-            echo "mock.txt not found, skipping removal"
-          fi
-
-      # Upload EOS logs and test logs
-      - name: Upload log output
-        if: always()
-        uses: actions/upload-artifact@v4.5.0
-        with:
-          name: debug-logs
-          retention-days: 14
-          path: |
-            /home/runner/eos/*.log
-            ./*.log
+    uses: ersilia-os/ersilia-model-workflows/.github/workflows/test-model-pr.yml@main
+    with:
+      branch: "main"
+      repo_name: ${{ github.event.repository.name }}

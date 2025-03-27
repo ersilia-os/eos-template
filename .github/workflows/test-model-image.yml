@@ -1,104 +1,31 @@
-# Workflow to test the model image on both Ubuntu and MacOS platforms
-# This workflow is triggered when the workflow to upload the model to DockerHub is completed
-# We will run the test playground from ersilia to test the model image
-# We will store the architecture information in a file and upload it as an artifact
 name: Test model image
 
 on:
   workflow_run:
-    workflows: ["Upload model to DockerHub"]
+    workflows: ["Test and upload model"]
     types:
       - completed
+  workflow_dispatch:
 
 jobs:
   test-image:
-    if: ${{ github.repository != 'ersilia-os/eos-template' }}
     if: ${{ github.event.workflow_run.conclusion == 'success' }}
-    strategy:
-      matrix:
-        platform: [ubuntu-latest, macos-latest]
-    runs-on: ${{ matrix.platform }}
-    defaults:
-      run:
-        shell: bash -el {0}
-
-    steps:
-      - uses: actions/setup-python@5.3.0
-        with:
-          python-version: "3.10"
-      
-      # Checkout ersilia so we can run the testing playground
-      - name: Checkout ersilia
-        uses: actions/checkout@v4.2.2
-        with:
-          repository: ersilia-os/ersilia
-          ref: master
-          path: ersilia
-      
-      # Install ersilia with the test extra
-      - name: Install ersilia
-        run: |
-          python -m pip install 'git+https://github.com/ersilia-os/ersilia.git#egg=ersilia[test]'
-      
-      # TODO(@dhanshree and @abel): Configure the environment variable to for the model and tag
-      # Run the test playground
-      - name: Run the test playground
-        id: test-playground
-        continue-on-error: true
-        env:
-          MODEL: ${{ github.event.repository.name }}
-          TAG: ${{ inputs.tag }}
-        run: |
-          cd ersilia/test/playground
-          nox -s execute -- --single $MODEL --fetch from_dockerhub version dev
-      
-      # We will parse the log to see if the test passed
-      - name: Parse log
-        run: |
-          cat log.txt
-
-      # Store architecture information
-      # If test-playground succeeds we save amd if run on ubuntu, arm if run on macos
-      - name: Store architecture information
-        id: architecture
-        if: steps.test-playground.outcome == 'success'
-        run: |
-          if [[ ${{ matrix.platform }} == 'ubuntu-latest' ]]; then
-            echo "success" > amd.txt
-          else
-            echo "success" > arm.txt
-          fi
-
-      # Upload log artifact from the playground and the architecture information
-      - name: Upload log artifact
-        uses: actions/upload-artifact@v3
-        with:
-          name: build-logs
-          retention-days: 14
-          path: |
-            *.txt
-
-  retag-image:
-    if: ${{ github.repository != 'ersilia-os/eos-template' }}
+    uses: ersilia-os/ersilia-model-workflows/.github/workflows/test-model-image.yml@main
+    with:
+      repo_name: ${{ github.event.repository.name }}
+    secrets:
+      DOCKERHUB_USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}
+      DOCKERHUB_PASSWORD: ${{ secrets.DOCKERHUB_PASSWORD }}
+  
+  post-upload:
     needs: test-image
-    runs-on: ubuntu-latest
-    steps:
-      - name: Download architecture information
-        uses: actions/download-artifact@v3
-        with:
-          name: build-logs
-      
-      # If either amd.txt or arm.txt files exist, we tag the image with date and as latest
-      - name: Check architecture information
-        env:
-          MODEL: ${{ github.event.repository.name }}
-        run: |
-            if [[ -f amd.txt || -f arm.txt ]]; then
-              echo "Tagging image with date and as latest"
-              docker tag ersiliaos/$MODEL:dev ersiliaos/$MODEL:$(date +%Y-%m-%d)
-              docker tag ersiliaos/$MODEL:dev ersiliaos/$MODEL:latest
-              docker push ersiliaos/$MODEL:$(date +%Y-%m-%d) && docker push ersiliaos/$MODEL:latest
-            else
-              echo "Image test failed, keeping the dev tag"
-              exit 1
-            fi
+    if: ${{ needs.test-image.result == 'success' }}
+    uses: ersilia-os/ersilia-model-workflows/.github/workflows/post-model-upload.yml@main
+    with:
+      repo_name: ${{ github.event.repository.name }}
+    secrets:
+      AIRTABLE_API_KEY: ${{ secrets.AIRTABLE_API_KEY }}
+      AWS_ACCESS_KEY: ${{ secrets.AWS_ACCESS_KEY }}
+      AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+      DOCKERHUB_USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}
+      DOCKERHUB_PASSWORD: ${{ secrets.DOCKERHUB_PASSWORD }}
