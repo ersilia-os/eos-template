@@ -1,4 +1,4 @@
-name: Test and upload model on PR
+name: Test model on PR
 
 on:
   pull_request:
