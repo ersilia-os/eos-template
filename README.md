@@ -50,5 +50,8 @@ The installation parser will raise an exception if dependencies are not specifie
 
 Model metadata should be specified within metadata.yml. A detailed explanation of what the metadata fields correspond to can be found [here.](https://ersilia.gitbook.io/ersilia-book/ersilia-model-hub/incorporate-models/model-template). Note that some fields will be automatically updated upon model incorporation in Ersilia.
 
+### Dockerignore
+This file will mark the files not needed in the Docker image of the model. By definition, the .git folder is ignored. Other files to be ignored could include training data of the model (which will be available in GitHub and S3 but is not needed to run the model image). This is devised to reduce the final size of the images.
+
 ### README file
 Please do not make any changes to this README file. It will automatically be updated when the model is incorporated in the Ersilia Model Hub.
