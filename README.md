@@ -1,7 +1,7 @@
-# Ersilia Model Contribution
+# Ersilia Model Template
 
 This README contains the instructions to incorporate a model. Please follow along to bring your model into the Ersilia Model Hub. After successful incorporation of the model, this README will be automatically updated to reflect model specific details.
-Further information can be found in our [Documentation](https://ersilia.gitbook.io/ersilia-book/ersilia-model-hub/model-contribution/)
+Further information can be found in our [Documentation](https://ersilia.gitbook.io/ersilia-book/ersilia-model-hub/model-contribution/).
 
 ## Folder Structure
 
@@ -48,7 +48,7 @@ The installation parser will raise an exception if dependencies are not specifie
 
 ### Model Metadata
 
-Model metadata should be specified within metadata.yml. A detailed explanation of what the metadata fields correspond to can be found [here.](https://ersilia.gitbook.io/ersilia-book/ersilia-model-hub/incorporate-models/model-template). Note that some fields will be automatically updated upon model incorporation in Ersilia.
+Model metadata should be specified within metadata.yml. A detailed explanation of what the metadata fields correspond to can be found [here](https://ersilia.gitbook.io/ersilia-book/ersilia-model-hub/incorporate-models/model-template). Note that some fields will be automatically updated upon model incorporation in Ersilia.
 
 ### Dockerignore
 This file will mark the files not needed in the Docker image of the model. By definition, the .git folder is ignored. Other files to be ignored could include training data of the model (which will be available in GitHub and S3 but is not needed to run the model image). This is devised to reduce the final size of the images.
