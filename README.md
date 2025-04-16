@@ -1,10 +1,11 @@
 # Ersilia Model Contribution
 
 This README contains the instructions to incorporate a model. Please follow along to bring your model into the Ersilia Model Hub. After successful incorporation of the model, this README will be automatically updated to reflect model specific details.
+Further information can be found in our [Documentation](https://ersilia.gitbook.io/ersilia-book/ersilia-model-hub/model-contribution/)
 
 ## Folder Structure
 
-Generally, two important pieces make up a model that goes into the hub: the model checkpoints, and the code to load and make predictions with that model. With that in mind, the model folder is organised as follows:
+Generally, two important pieces make up a model that goes into the hub: the model checkpoints and the code to load and make predictions with that model. With that in mind, the model folder is organised as follows:
 
 ```
 └── model
@@ -17,34 +18,37 @@ Generally, two important pieces make up a model that goes into the hub: the mode
         ├── examples
         │   ├── run_input.csv
         │   └── run_output.csv
+        ├── columns
+            └── run_columns.csv
         └── run.sh
 ```
-
 - `model/checkpoints` contains checkpoint files required by the model
 - `model/framework` contains the driver code to load the model and run inferences from it. There are two files of interest here: `main.py`, and `run.sh`. The `main.py` file will contain the driver code to load model checkpoints and call its prediction API, while `run.sh` serves two purposes, it runs the code in the `main.py` file and also tells Ersilia that this model server will have a `run` API.
+- `model/framework/examples` contains an example input file (should have three smiles under the header smiles, this file can be generated with the `ersilia example` command) and the output of running the `run.sh` on the example inputs.
+- `model/framework/columns` contains a template of the expected output columns, indicating their name, type (float, integer or string), direction (high,low) and a short one-sentence description. For more rules on how to fill in this file, check our [Documentation](https://ersilia.gitbook.io/ersilia-book/ersilia-model-hub/model-contribution/model-template).
 
-## Specifying Dependencies
+## Changes to templated files
+
+In addition to adding the model checkpoints, the code for running them and the example and columns file, you'll need to edit the following:
+
+### Dependencies
 
 To specify dependencies for this model, use the `install.yml` file to populate all the necessary dependencies required by the model to successfully run. This dependency configuration file has two top level keys:
 
-- `python` which expects a string value denoting a python version (eg `"3.10"`)
-- `commands` which expects a list of values, each of which is a list on its own, denoting the dependencies required by the model. Currently, dependencies `pip` and `conda` are supported. 
-- `pip` dependencies are expected to be three element lists in the format `["pip", "library", "version"]`
+- `python` which expects a string value denoting a python version (eg `"3.12"`)
+- `commands` which expects a list of values, each of which is a list on its own, denoting the dependencies required by the model. Currently, `pip` and `conda` dependencies are supported. 
+- `pip` dependencies are expected to be one of the following lists:
+    -  Versioned dependency: three element lists in the format `["pip", "library", "version"]`
+    - Versioned dependency with additional flags: five element lists in the format `["pip", "library", "version", "--index-url", "URL"]`
+    - VCS-based dependency: four element lists in the format `['pip', 'git', 'URL', 'commit_sha']`
 - `conda` dependencies are expected to be four element lists in the format `["conda", "library", "version", "channel"]`, where channel is the conda channel to install the required library.
 
 The installation parser will raise an exception if dependencies are not specified in the aforementioned format.
 
-**Note**: Please note that we realise that this form of dependency specification is restrictive. We are [working](https://github.com/ersilia-os/ersilia-pack/issues/21) on extending how Ersilia Pack handles dependency specification, for example, to handle VCS and URL based dependencies. 
 
+### Model Metadata
 
-## Specifying Model Metadata
+Model metadata should be specified within metadata.yml. A detailed explanation of what the metadata fields correspond to can be found [here.](https://ersilia.gitbook.io/ersilia-book/ersilia-model-hub/incorporate-models/model-template). Note that some fields will be automatically updated upon model incorporation in Ersilia.
 
-Model metadata should be specified within metadata.yml. An explanation of what these metadata fields correspond to can be found [here.](https://ersilia.gitbook.io/ersilia-book/ersilia-model-hub/incorporate-models/model-template#the-metadata.json-file)
-
-## Specifying Model APIs
-
-A bash script within the `model/framework` directory is interepreted by Ersilia as an API for the model. For example, `run.sh` corresponds to a model `run` API, and similarly, a `fit.sh` would correspond to a model `fit` API. However arbitrary file names for bash script files are not allowed, and the acceptable names are one of the following: [`run`, `fit`]. 
-
-## Adding Example Input and Output
-
-It is always helpful to provide an example input and output while contributing a model to ease the verification of the model's working. To ensure all models always have an example, Ersilia checks for example CSV files in the `model/framework/examples` directory. In particular, Ersilia looks for `input.csv`, and `output.csv` files in this folder. These files are used to generate the necessary API end points for building a model server and therefore must always be provided.
+### README file
+Please do not make any changes to this README file. It will automatically be updated when the model is incorporated in the Ersilia Model Hub.

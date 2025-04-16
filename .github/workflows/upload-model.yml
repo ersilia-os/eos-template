@@ -20,7 +20,7 @@ jobs:
 
   upload-model-to-s3:
     needs: test-model-source
-    if: ${{ needs.test-model-source.result == 'success' }}}}
+    if: ${{ needs.test-model-source.result == 'success' }}
     uses: ersilia-os/ersilia-model-workflows/.github/workflows/upload-model-to-s3.yml@main
     with:
       repo_name: ${{ github.event.repository.name }}
@@ -42,7 +42,7 @@ jobs:
   # BentoML Multistage Build (runs if Ersilia Pack fails)
   upload-bentoml-multistage:
     needs: upload-ersilia-pack
-    if: ${{ needs.upload-ersilia-pack.result == 'failure' }}
+    if: ${{ failure() && needs.upload-ersilia-pack.result == 'failure' }}
     uses: ersilia-os/ersilia-model-workflows/.github/workflows/upload-bentoml.yml@main
     with:
       repo_name: ${{ github.event.repository.name }}
@@ -54,7 +54,7 @@ jobs:
   # BentoML Legacy Build (runs only if both previous jobs fail)
   upload-bentoml-legacy:
     needs: [upload-ersilia-pack, upload-bentoml-multistage]
-    if: ${{ needs.upload-ersilia-pack.result == 'failure' && needs.upload-bentoml-multistage.result == 'failure' }}
+    if: ${{ failure() && needs.upload-ersilia-pack.result == 'failure' && needs.upload-bentoml-multistage.result == 'failure' }}
     uses: ersilia-os/ersilia-model-workflows/.github/workflows/upload-bentoml.yml@main
     with:
       repo_name: ${{ github.event.repository.name }}
