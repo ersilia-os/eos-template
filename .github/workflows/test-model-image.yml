@@ -5,7 +5,6 @@ on:
     workflows: ["Test and upload model"]
     types:
       - completed
-  workflow_dispatch:
 
 jobs:
   test-image:
@@ -19,7 +18,7 @@ jobs:
   
   post-upload:
     needs: test-image
-    if: ${{ needs.test-image.result == 'success' }}
+    if: needs.test-image.outputs.retag-success == 'success'
     uses: ersilia-os/ersilia-model-workflows/.github/workflows/post-model-upload.yml@main
     with:
       repo_name: ${{ github.event.repository.name }}
