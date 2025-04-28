@@ -10,5 +10,5 @@ jobs:
     if: github.repository != 'ersilia-os/eos-template'
     uses: ersilia-os/ersilia-model-workflows/.github/workflows/test-model-pr.yml@main
     with:
-      branch: "main"
+      branch: ${{ github.head_ref }}
       repo_name: ${{ github.event.repository.name }}
