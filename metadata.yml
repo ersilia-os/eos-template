@@ -5,13 +5,23 @@ Title: This is a template model
 Description: |
   This is a description of the template model.
   You can use multiple lines in this description.
+Deployment:
+  - Local
+  - Online
 Source: Local, Online
 Source Type: Internal, Replicated, External
 Task: Annotation, Representation, Sampling
 Subtask: Property calculation or prediction, Activity prediction, Featurization, Projection, Similarity search, Generation
-Input: Compound
+Input: 
+  - Compound
 Input Dimension: 1
-Output: Value, Score
+Output: 
+  - Value
+  - Score
+  - Compound
+  - Probability
+  - Experimental value
+  - ...
 Output Dimension: 1
 Output Consistency: Fixed, Variable
 Interpretation: |
@@ -30,4 +40,4 @@ Publication Type: Peer reviewed, Preprint, Other
 Publication Year: 2025
 Publication: https://example.com
 Source Code: https://example.com
-License: GPL-3.0-or-later, MIT, ...
+License: GPL-3.0-or-later, MIT, Apache-2.0...
