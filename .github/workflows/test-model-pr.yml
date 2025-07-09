@@ -13,3 +13,4 @@ jobs:
       branch: ${{ github.head_ref }}
       repo_name: ${{ github.event.repository.name }}
       pr_user: ${{ github.event.pull_request.user.login }}
+      runner: ubuntu-latest

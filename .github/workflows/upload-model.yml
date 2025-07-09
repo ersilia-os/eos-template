@@ -13,6 +13,7 @@ jobs:
     with:
       branch: "main"
       repo_name: ${{ github.event.repository.name }}
+      runner: ubuntu-latest
     secrets:
       AIRTABLE_API_KEY: ${{ secrets.AIRTABLE_API_KEY }}
       AWS_ACCESS_KEY: ${{ secrets.AWS_ACCESS_KEY }}
@@ -24,6 +25,7 @@ jobs:
     uses: ersilia-os/ersilia-model-workflows/.github/workflows/upload-model-to-s3.yml@main
     with:
       repo_name: ${{ github.event.repository.name }}
+      runner: ubuntu-latest
     secrets:
       AWS_ACCESS_KEY: ${{ secrets.AWS_ACCESS_KEY }}
       AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
@@ -35,6 +37,7 @@ jobs:
     uses: ersilia-os/ersilia-model-workflows/.github/workflows/upload-ersilia-pack.yml@main
     with:
       repo_name: ${{ github.event.repository.name }}
+      runner: ubuntu-latest
     secrets:
       DOCKERHUB_USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}
       DOCKERHUB_PASSWORD: ${{ secrets.DOCKERHUB_PASSWORD }}
