@@ -12,6 +12,7 @@ jobs:
     uses: ersilia-os/ersilia-model-workflows/.github/workflows/test-model-image.yml@main
     with:
       repo_name: ${{ github.event.repository.name }}
+      runner: ubuntu-latest
     secrets:
       DOCKERHUB_USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}
       DOCKERHUB_PASSWORD: ${{ secrets.DOCKERHUB_PASSWORD }}
@@ -22,6 +23,7 @@ jobs:
     uses: ersilia-os/ersilia-model-workflows/.github/workflows/post-model-upload.yml@main
     with:
       repo_name: ${{ github.event.repository.name }}
+      runner: ubuntu-latest
     secrets:
       AIRTABLE_API_KEY: ${{ secrets.AIRTABLE_API_KEY }}
       AWS_ACCESS_KEY: ${{ secrets.AWS_ACCESS_KEY }}

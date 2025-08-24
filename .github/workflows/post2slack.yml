@@ -9,6 +9,7 @@ jobs:
     uses: ersilia-os/ersilia-model-workflows/.github/workflows/post-to-slack.yml@main
     with:
       repo_name: ${{ github.event.repository.name }}
+      runner: ubuntu-latest
     secrets:
       SLACK_CHANNEL_TESTER: ${{ secrets.SLACK_CHANNEL_TESTER }}
       SLACK_TOKEN: ${{ secrets.SLACK_TOKEN }}
