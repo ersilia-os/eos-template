@@ -1,0 +1,20 @@
+name: Retag image on release
+
+on:
+  release:
+    types: [published] 
+
+jobs:
+  retag:
+    uses: ersilia-os/ersilia-model-workflows/.github/workflows/retag-release-docker.yml@main
+    with:
+      branch: "main"
+      repo_name: ${{ github.event.repository.name }}
+      release_tag: ${{ github.event.release.tag_name }}
+      runner: ubuntu-latest
+    secrets:
+      DOCKERHUB_USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}
+      DOCKERHUB_PASSWORD: ${{ secrets.DOCKERHUB_PASSWORD }}
+      AIRTABLE_API_KEY: ${{ secrets.AIRTABLE_API_KEY }}
+      AWS_ACCESS_KEY: ${{ secrets.AWS_ACCESS_KEY }}
+      AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
