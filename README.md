@@ -44,7 +44,7 @@ Use the `install.yml` file to specify all the necessary dependencies required by
     - `pip` dependencies are expected to be one of the following lists:
         -  Versioned dependency: three element lists in the format `["pip", "library", "version"]`
         - Versioned dependency with additional flags: five element lists in the format `["pip", "library", "version", "--index-url", "URL"]`
-        - VCS-based dependency: four element lists in the format `['pip', 'git', 'URL', 'commit_sha']`
+        - VCS-based dependency: four element lists in the format `['pip', 'URL']`. E.g `["pip", "git+https://github.com/bp-kelley/descriptastorus.git@9a190343bcd3cfd35142d378d952613bcac40797"]`.
     - `conda` dependencies are expected to be four element lists in the format `["conda", "library", "version", "channel"]`, where channel is the conda channel to install the required library.
     - For other `bash` commands, simply specify them as a oneliner string.
 
