@@ -19,9 +19,7 @@ Output:
   - Value
   - Score
   - Compound
-  - Probability
-  - Experimental value
-  - ...
+  - Text
 Output Dimension: 1
 Output Consistency: Fixed, Variable
 Interpretation: |
