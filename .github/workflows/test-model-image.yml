@@ -6,6 +6,9 @@ on:
     types:
       - completed
 
+permissions:
+  contents: write
+
 jobs:
   test-image:
     if: ${{ github.event.workflow_run.conclusion == 'success' }}
@@ -24,6 +27,7 @@ jobs:
     with:
       repo_name: ${{ github.event.repository.name }}
       runner: ubuntu-latest
+      auto_release: true
     secrets:
       AIRTABLE_API_KEY: ${{ secrets.AIRTABLE_API_KEY }}
       AWS_ACCESS_KEY: ${{ secrets.AWS_ACCESS_KEY }}
