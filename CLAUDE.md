@@ -47,9 +47,11 @@ Mandatory. Receives three arguments from Ersilia: `$1` framework dir, `$2` input
 
 ## Checkpoints and `eosvc`
 
-- `model/checkpoints/` and `model/framework/fit/` are gitignored on purpose. Never `git add` them.
-- Persist them with [`eosvc`](https://github.com/ersilia-os/eosvc), which backs both folders with S3.
-- `access.json` controls public vs. private — both default to public. Only change on explicit user request.
+- `model/checkpoints/` and `model/framework/fit/` (training data included) are committed to git.
+- If any file in one of these folders is larger than 100 MB, gitignore that whole folder and persist it with [`eosvc`](https://github.com/ersilia-os/eosvc) instead: add an `access.json` (e.g. `{"checkpoints": "public"}`) and run `eosvc upload --path checkpoints` (or `--path fit`). Never `--path .`, which uploads both folders.
+- Check with `find model/checkpoints model/framework/fit -type f -size +100000000c`. No output means both folders stay in git and the repo needs no `access.json`.
+- Never keep a folder in both git and S3: when `access.json` exists, CI downloads the S3 copy over the git one.
+- `access.json` controls public vs. private — public by default. Only change on explicit user request.
 
 ## Versioning
 
