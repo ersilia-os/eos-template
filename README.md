@@ -52,5 +52,5 @@ Model metadata should be specified within `metadata.yml`. A detailed explanation
 
 ## Tracking and Workflows
 
-- The [EOSVC](https://github.com/ersilia-os/eosvc) tool is used to persist the `model/checkpoints` and `model/framework/fit` folders. Edit the `access.json` file if you want to keep those folders private. They are public by default.
+- The `model/checkpoints` and `model/framework/fit` folders are committed to git. A folder that holds a file larger than 99.99 MB is gitignored instead and persisted with the [EOSVC](https://github.com/ersilia-os/eosvc) tool, declared in an `access.json` file (public by default).
 - Models are not ready until they pass all GitHub Actions workflows.
