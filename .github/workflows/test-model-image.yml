@@ -30,3 +30,18 @@ jobs:
       AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
       DOCKERHUB_USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}
       DOCKERHUB_PASSWORD: ${{ secrets.DOCKERHUB_PASSWORD }}
+
+  # Only for a new model: post-upload creates and tags v1.0.0 itself (always v1.0.0),
+  # and releases created with GITHUB_TOKEN do not trigger retag-release-docker.
+  build-sif:
+    needs: post-upload
+    if: needs.post-upload.outputs.created-release == 'true'
+    uses: ersilia-os/ersilia-model-workflows/.github/workflows/build-upload-sif.yml@main
+    with:
+      repo_name: ${{ github.event.repository.name }}
+      version: v1.0.0
+      runner: ubuntu-latest
+    secrets:
+      AWS_ACCESS_KEY: ${{ secrets.AWS_ACCESS_KEY }}
+      AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+      AIRTABLE_API_KEY: ${{ secrets.AIRTABLE_API_KEY }}
