@@ -22,7 +22,11 @@ Mandatory. Receives three arguments from Ersilia: `$1` framework dir, `$2` input
 
 ## `model/framework/code/main.py`
 
-- Read `input_file = sys.argv[1]`, `output_file = sys.argv[2]`. No other CLI flags.
+- Split the code into two top-level functions so the model can be served warm (loaded once, reused across batches):
+  - `load_tool()` does everything slow and batch-independent (heavy imports, reading checkpoints, building the model) and returns the loaded model.
+  - `run_tool(model, input_file, output_file)` processes one batch: `read_smiles`, predict, `write_out`. It must not reload anything and must not depend on state left over from earlier batches.
+- Keep the `if __name__ == "__main__":` block that reads `input_file = sys.argv[1]`, `output_file = sys.argv[2]` and calls `run_tool(load_tool(), input_file, output_file)`. `run.sh`, `ersilia test` and CI still execute `main.py` as a script. No other CLI flags, and no work at module level outside the functions and constants.
+- Warm serving only applies when `run.sh` is the default single line `python $1/code/main.py $2 $3`. Any other `run.sh` keeps running once per batch.
 - Use `from ersilia_pack_utils.core import read_smiles, write_out` (already pinned in `install.yml`) — do not hand-roll csv parsing. `read_smiles` returns `(header, smiles_list)` and transparently handles `.csv` and `.bin` inputs.
 - Write outputs with `write_out(results, header, output_file, dtype)`. Allowed dtypes: `np.float32` or `np.int32`. NaNs and inf are clipped automatically.
 - Column headers must exactly match `model/framework/columns/run_columns.csv`. Conventions: `feat_000`, `feat_001`, … for featurizers; `smi_00`, `smi_01`, … for generators; descriptive `snake_case` for scalar predictors.
