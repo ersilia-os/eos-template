@@ -51,6 +51,6 @@ Model metadata should be specified within `metadata.yml`. A detailed explanation
 ## Tracking and Workflows
 
 - Weights the model loads go in `model/checkpoints/`. The folder is committed to git if every file is under 100 MiB; if any file is 100 MiB or larger, the whole folder is gitignored and persisted with the [EOSVC](https://github.com/ersilia-os/eosvc) tool, declared in an `access.json` file (public by default).
-- `model/framework/fit/` (training code and data) is always persisted with EOSVC once it holds anything. A model without a training step keeps the empty template skeleton in git.
+- `model/framework/fit/` is persisted with EOSVC as soon as it holds training code or data, whatever its size. A model without a training step keeps the empty template skeleton in git.
 - Git LFS is not used, and models do not download weights at run time. See [Checkpoints and storage](https://ersilia.gitbook.io/ersilia-book/ersilia-model-hub/model-contribution/model-template#checkpoints-and-storage) in the Ersilia Book.
 - Models are not ready until they pass all GitHub Actions workflows.
