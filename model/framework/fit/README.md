@@ -2,6 +2,8 @@
 
 This folder is only required for models with source `Internal` or `Replicated`. It should contain the data and code used to train the model, and results of model performance.
 
+Once this folder holds training code or data, the whole folder is stored in S3 with [eosvc](https://github.com/ersilia-os/eosvc), not in git: add `"fit": "public"` to `access.json`, add `model/framework/fit/*` to `.gitignore`, and run `eosvc upload --path fit`. A model without a training step keeps this skeleton in git. See [Checkpoints and storage](https://ersilia.gitbook.io/ersilia-book/ersilia-model-hub/model-contribution/model-template#checkpoints-and-storage).
+
 Please adhere to the following structure:
 
 ## `data` folder

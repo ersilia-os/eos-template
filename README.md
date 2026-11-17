@@ -42,9 +42,7 @@ Model metadata should be specified within `metadata.yml`. A detailed explanation
 
 #### Other Relevant Files
 
-- The `.dockerignore` file can be used to specify which files and folders should not be included in the eventual Docker image. By default, the `.git` folder is ignored. Other files to be ignored could include training data of the model, which will be available in GitHub and S3 but is not needed to run the model image. This is devised to reduce the final size of the images.
-
-- Consider adding a `.gitattributes` file if your model contains large files. In this file, you can specify which files should be handled with [Git LFS](https://git-lfs.com/).
+- The `.dockerignore` file can be used to specify which files and folders should not be included in the eventual Docker image. By default, the `.git` folder is ignored. Other files to be ignored could include training data of the model, which is stored in S3 with eosvc but is not needed to run the model image. This is devised to reduce the final size of the images.
 
 - As you work with the model, use the `.gitignore` file appropriately to ensure that only relevant files are included in the model repository.
 
@@ -52,5 +50,7 @@ Model metadata should be specified within `metadata.yml`. A detailed explanation
 
 ## Tracking and Workflows
 
-- The `model/checkpoints` and `model/framework/fit` folders are committed to git. A folder that holds a file larger than 100 MB is gitignored instead and persisted with the [EOSVC](https://github.com/ersilia-os/eosvc) tool, declared in an `access.json` file (public by default).
+- Weights the model loads go in `model/checkpoints/`. The folder is committed to git if every file is under 100 MiB; if any file is 100 MiB or larger, the whole folder is gitignored and persisted with the [EOSVC](https://github.com/ersilia-os/eosvc) tool, declared in an `access.json` file (public by default).
+- `model/framework/fit/` is persisted with EOSVC as soon as it holds training code or data, whatever its size. A model without a training step keeps the empty template skeleton in git.
+- Git LFS is not used, and models do not download weights at run time. See [Checkpoints and storage](https://ersilia.gitbook.io/ersilia-book/ersilia-model-hub/model-contribution/model-template#checkpoints-and-storage) in the Ersilia Book.
 - Models are not ready until they pass all GitHub Actions workflows.

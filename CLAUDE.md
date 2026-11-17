@@ -51,19 +51,24 @@ Mandatory. Receives three arguments from Ersilia: `$1` framework dir, `$2` input
 
 ## Checkpoints and `eosvc`
 
-- `model/checkpoints/` and `model/framework/fit/` (training data included) are committed to git.
-- If any file in one of these folders is larger than 100 MB, gitignore that whole folder and persist it with [`eosvc`](https://github.com/ersilia-os/eosvc) instead: add an `access.json` (e.g. `{"checkpoints": "public"}`) and run `eosvc upload --path checkpoints` (or `--path fit`). Never `--path .`, which uploads both folders.
-- Check with `find model/checkpoints model/framework/fit -type f -size +100000000c`. No output means both folders stay in git and the repo needs no `access.json`.
-- Never keep a folder in both git and S3: when `access.json` exists, CI downloads the S3 copy over the git one.
+Full rule: [Checkpoints and storage](https://ersilia.gitbook.io/ersilia-book/ersilia-model-hub/model-contribution/model-template#checkpoints-and-storage) in the Ersilia Book.
+
+- Weights the model loads at inference live in `model/checkpoints/`, never in `model/framework/code/`. The model must not download weights at run time (Hugging Face, Google Drive, Zenodo…): download once, place them in `model/checkpoints/`, load from there.
+- `model/checkpoints/` is committed to git if every file is under 100 MiB (104,857,600 bytes, GitHub's limit). Check with `find model/checkpoints -type f -size +104857599c`; any output means the whole folder goes to `eosvc`.
+- `model/framework/fit/` goes to [`eosvc`](https://github.com/ersilia-os/eosvc) as soon as it holds training code or data, whatever its size. A model without a training step keeps the template skeleton (`README.md` and the `.gitkeep` folders) in git and does not list `fit` in `access.json` or `.gitignore`.
+- To store a folder with `eosvc`: list it in `access.json` (e.g. `{"checkpoints": "public", "fit": "public"}`), add it under a `#eosvc managed` block in `.gitignore` (`model/checkpoints/*`, `model/framework/fit/*`), and run `eosvc upload --path checkpoints` / `--path fit`. Never `--path .`, which uploads both folders. Leaving a folder out of `access.json` does not protect it: eosvc treats a missing key as public, and CI runs `eosvc download --path .` whenever `access.json` exists.
+- No Git LFS: no `.gitattributes` LFS rules, no `mock.csv`/`mock.txt`.
+- Never keep a folder in both git and S3: when `access.json` exists, CI downloads the S3 copy over the git one. If a folder was committed before moving it to eosvc, untrack it with `git rm -r --cached model/checkpoints` (or `model/framework/fit`).
 - `access.json` controls public vs. private — public by default. Only change on explicit user request.
 
 ## Versioning
 
-Models follow [semantic versioning](https://semver.org/) (`vMAJOR.MINOR.PATCH`) via git tags / GitHub releases — the `retag-release-docker.yml` workflow propagates the tag to the published Docker image.
+Models follow [semantic versioning](https://semver.org/) (`vMAJOR.MINOR.PATCH`) via GitHub releases — the `retag-release-docker.yml` workflow propagates the tag to the published Docker image. The rules and the pre-release checklist are in [Model releases](https://ersilia.gitbook.io/ersilia-book/ersilia-model-hub/model-contribution/example-of-the-model-incorporation-workflow#model-releases) in the Ersilia Book; in short:
 
-- **MAJOR** — any change a downstream user can observe in the predictions. New, removed, or renamed columns in `run_columns.csv`; a different dtype; retrained checkpoints; an upstream library bump that shifts predicted values. If, for fixed-output models, `examples/run_output.csv` is no longer reproducible byte-for-byte with the previous release on the same `run_input.csv`, it's MAJOR.
-- **MINOR** — additive, output-preserving changes (new optional metadata, expanded examples, faster implementation that produces identical values).
-- **PATCH** — fixes that do not change predictions: docs, install.yml pin nudges that still resolve to the same wheels, CI-only tweaks.
+- **MAJOR** — checkpoints change; output columns added, removed, renamed, reordered or retyped; inputs that returned a value now return empty; values for valid inputs change beyond 1e-4 (whatever the cause); for generators, a new sampling method, model or selection criteria.
+- **MINOR** — code, dependency or image changes with the same columns and outputs within 1e-4: dependency updates and the rebuilds they need, speed-ups, smaller images, a GPU option (GPU outputs may differ slightly; report the difference), fixes where failing inputs now return a result, the same weights in another file format, moving checkpoints into `model/checkpoints/`.
+- **PATCH** — no change to code, dependencies, checkpoints or outputs: metadata, README, `run_columns.csv` descriptions or direction, a rebuilt image of unchanged code.
+- **No release** — a pure storage move between Git LFS, Git and eosvc, or removing a duplicate copy, with identical files (check every sha256), code and outputs; wait for the PR test, then merge with `[skip ci]`.
 
 Never change version without asking the user.
 
@@ -72,7 +77,8 @@ Never change version without asking the user.
 The workflows in `.github/workflows/` are thin wrappers around reusable workflows in [`ersilia-os/ersilia-model-workflows`](https://github.com/ersilia-os/ersilia-model-workflows) — that's where the actual test, S3 upload, and Docker pack logic lives. Read it there before debugging CI behaviour, and do not edit the local YAMLs to work around a failure.
 
 - **Open a PR; don't push to `main`.** `test-model-pr.yml` gives a fast signal on a PR. `upload-model.yml` runs on push to `main` and chains `test-model-source` → `upload-model-to-s3` → `upload-ersilia-pack`; a broken model wastes S3/DockerHub budget.
-- **A model isn't done until every workflow is green.** Status: PR test, source test, S3 upload, ersilia-pack image build, image test.
+- **A model isn't done until every workflow is green.** Status: PR test, source test, S3 upload, ersilia-pack image build, image test. Check every job of "Test model image", not only the run: a green run can hide a failed `test-image-arm64`. `test-image-amd64`, `retag-image` and `post-model-upload` must pass. `test-image-arm64` should pass; if the model cannot run on ARM64 for now, set `Docker Architecture` to AMD64 only in the metadata and say so in the release notes.
+- **Never "Re-run jobs" on "Test model image" after `post-model-upload` has pushed the metadata once** — the re-run checks out the old commit and its push is rejected. Start a fresh run instead (see the next point).
 - **Inspect failures with `gh`.** `gh run list --limit 5`, then `gh run view <id> --log-failed`. Reproduce the failure locally (run `run.sh` against `examples/run_input.csv` and diff against `run_output.csv`) before pushing a fix.
 - **Re-running uploads.** `upload-model.yml` supports `workflow_dispatch` — after merging a fix to `main`, trigger it manually rather than pushing an empty commit.
 
