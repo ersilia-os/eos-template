@@ -42,7 +42,7 @@ Model metadata should be specified within `metadata.yml`. A detailed explanation
 
 #### Other Relevant Files
 
-- The `.dockerignore` file can be used to specify which files and folders should not be included in the eventual Docker image. By default, the `.git` folder is ignored. Other files to be ignored could include training data of the model, which will be available in GitHub and S3 but is not needed to run the model image. This is devised to reduce the final size of the images.
+- The `.dockerignore` file can be used to specify which files and folders should not be included in the eventual Docker image. By default, the `.git` folder is ignored. Other files to be ignored could include training data of the model, which is stored in S3 with eosvc but is not needed to run the model image. This is devised to reduce the final size of the images.
 
 - As you work with the model, use the `.gitignore` file appropriately to ensure that only relevant files are included in the model repository.
 

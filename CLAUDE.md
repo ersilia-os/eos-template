@@ -66,9 +66,9 @@ Full rule: [Checkpoints and storage](https://ersilia.gitbook.io/ersilia-book/ers
 Models follow [semantic versioning](https://semver.org/) (`vMAJOR.MINOR.PATCH`) via GitHub releases — the `retag-release-docker.yml` workflow propagates the tag to the published Docker image. The rules and the pre-release checklist are in [Model releases](https://ersilia.gitbook.io/ersilia-book/ersilia-model-hub/model-contribution/example-of-the-model-incorporation-workflow#model-releases) in the Ersilia Book; in short:
 
 - **MAJOR** — checkpoints change; output columns added, removed, renamed, reordered or retyped; inputs that returned a value now return empty; values for valid inputs change beyond 1e-4 (whatever the cause); for generators, a new sampling method, model or selection criteria.
-- **MINOR** — code, dependency or image changes with the same columns and outputs within 1e-4: rebuilds, speed-ups, smaller images, a GPU option, fixes where failing inputs now return a result, the same weights in another file format, moving checkpoints into `model/checkpoints/`.
+- **MINOR** — code, dependency or image changes with the same columns and outputs within 1e-4: dependency updates and the rebuilds they need, speed-ups, smaller images, a GPU option, fixes where failing inputs now return a result, the same weights in another file format, moving checkpoints into `model/checkpoints/`.
 - **PATCH** — no change to code, dependencies, checkpoints or outputs: metadata, README, `run_columns.csv` descriptions, a rebuilt image of unchanged code.
-- **No release** — a pure storage move (Git ↔ eosvc) with identical files, code and outputs; merge with `[skip ci]`.
+- **No release** — a pure storage move between Git LFS, Git and eosvc with identical files, code and outputs; merge with `[skip ci]`.
 
 Never change version without asking the user.
 
