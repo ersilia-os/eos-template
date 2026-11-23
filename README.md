@@ -38,7 +38,7 @@ The installation parser will raise an exception if dependencies are not specifie
 
 #### Model Metadata
 
-Model metadata should be specified within `metadata.yml`. A detailed explanation of what the metadata fields correspond to can be found [here](https://ersilia.gitbook.io/ersilia-book/ersilia-model-hub/incorporate-models/model-template). Note that some fields will be automatically updated upon model incorporation in Ersilia.
+Model metadata should be specified within `metadata.yml`. A detailed explanation of what the metadata fields correspond to can be found [here](https://ersilia.gitbook.io/ersilia-book/ersilia-model-hub/model-contribution/model-template). Note that some fields will be automatically updated upon model incorporation in Ersilia.
 
 #### Other Relevant Files
 
