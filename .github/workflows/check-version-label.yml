@@ -1,0 +1,19 @@
+name: Check version label
+
+# Every PR needs exactly one label: semver:patch, semver:minor, semver:major or
+# no-release. The check fails if the label is lower than the bump detected from
+# the change. Make "check-version-label / verdict" a required status check.
+
+on:
+  pull_request:
+    branches:
+      - main
+    types: [opened, synchronize, reopened, labeled, unlabeled]
+
+jobs:
+  check-version-label:
+    if: github.repository != 'ersilia-os/eos-template'
+    uses: ersilia-os/ersilia-model-workflows/.github/workflows/check-version-label.yml@main
+    with:
+      repo_name: ${{ github.event.repository.name }}
+      runner: ubuntu-latest
