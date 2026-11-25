@@ -7,8 +7,20 @@ on:
   workflow_dispatch:
 
 jobs:
-  test-model-source:
+  # Reads the version label of the merged PR. PATCH skips only the image
+  # rebuild; no-release skips the chain; MINOR, MAJOR and the first release
+  # are released by "Test model image" after its tests.
+  resolve:
     if: github.repository != 'ersilia-os/eos-template'
+    uses: ersilia-os/ersilia-model-workflows/.github/workflows/resolve-release.yml@main
+    with:
+      repo_name: ${{ github.event.repository.name }}
+      sha: ${{ github.sha }}
+      event: ${{ github.event_name }}
+
+  test-model-source:
+    needs: resolve
+    if: needs.resolve.outputs.skip_source != 'true'
     uses: ersilia-os/ersilia-model-workflows/.github/workflows/test-model-source.yml@main
     with:
       branch: "main"
@@ -30,10 +42,10 @@ jobs:
       AWS_ACCESS_KEY: ${{ secrets.AWS_ACCESS_KEY }}
       AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
       AIRTABLE_API_KEY: ${{ secrets.AIRTABLE_API_KEY }}
-    
+
   upload-ersilia-pack:
-    needs: upload-model-to-s3
-    if: ${{ needs.upload-model-to-s3.result == 'success' }}
+    needs: [resolve, upload-model-to-s3]
+    if: ${{ needs.upload-model-to-s3.result == 'success' && needs.resolve.outputs.skip_image != 'true' }}
     uses: ersilia-os/ersilia-model-workflows/.github/workflows/upload-ersilia-pack.yml@main
     with:
       repo_name: ${{ github.event.repository.name }}
@@ -41,3 +53,45 @@ jobs:
     secrets:
       DOCKERHUB_USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}
       DOCKERHUB_PASSWORD: ${{ secrets.DOCKERHUB_PASSWORD }}
+
+  # ---- PATCH: metadata only. The source test and the metadata, README and S3
+  # updates have run; the image is not rebuilt. Release now and retag the
+  # existing image. A release created with GITHUB_TOKEN does not fire the
+  # release event, so the retag and .sif jobs are chained here.
+  release-patch:
+    needs: [resolve, upload-model-to-s3]
+    if: needs.upload-model-to-s3.result == 'success' && needs.resolve.outputs.bump == 'patch' && needs.resolve.outputs.release == 'true'
+    uses: ersilia-os/ersilia-model-workflows/.github/workflows/release-model.yml@main
+    with:
+      repo_name: ${{ github.event.repository.name }}
+      bump: ${{ needs.resolve.outputs.bump }}
+      sha: ${{ github.sha }}
+      pr: ${{ needs.resolve.outputs.pr }}
+
+  retag-patch:
+    needs: release-patch
+    if: needs.release-patch.outputs.created == 'true'
+    uses: ersilia-os/ersilia-model-workflows/.github/workflows/retag-release-docker.yml@main
+    with:
+      repo_name: ${{ github.event.repository.name }}
+      release_tag: ${{ needs.release-patch.outputs.tag }}
+      ref: main
+      runner: ubuntu-latest
+    secrets:
+      DOCKERHUB_USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}
+      DOCKERHUB_PASSWORD: ${{ secrets.DOCKERHUB_PASSWORD }}
+      AIRTABLE_API_KEY: ${{ secrets.AIRTABLE_API_KEY }}
+      AWS_ACCESS_KEY: ${{ secrets.AWS_ACCESS_KEY }}
+      AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+
+  build-sif-patch:
+    needs: [release-patch, retag-patch]
+    uses: ersilia-os/ersilia-model-workflows/.github/workflows/build-upload-sif.yml@main
+    with:
+      repo_name: ${{ github.event.repository.name }}
+      version: ${{ needs.release-patch.outputs.tag }}
+      runner: ubuntu-latest
+    secrets:
+      AWS_ACCESS_KEY: ${{ secrets.AWS_ACCESS_KEY }}
+      AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+      AIRTABLE_API_KEY: ${{ secrets.AIRTABLE_API_KEY }}
