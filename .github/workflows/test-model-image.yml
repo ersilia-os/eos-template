@@ -7,8 +7,19 @@ on:
       - completed
 
 jobs:
-  test-image:
+  # Same decision as in "Test and upload model": PATCH and no-release did not
+  # rebuild, so there is no new image to test
+  resolve:
     if: ${{ github.event.workflow_run.conclusion == 'success' }}
+    uses: ersilia-os/ersilia-model-workflows/.github/workflows/resolve-release.yml@main
+    with:
+      repo_name: ${{ github.event.repository.name }}
+      sha: ${{ github.event.workflow_run.head_sha }}
+      event: ${{ github.event.workflow_run.event }}
+
+  test-image:
+    needs: resolve
+    if: needs.resolve.outputs.skip_image != 'true'
     uses: ersilia-os/ersilia-model-workflows/.github/workflows/test-model-image.yml@main
     with:
       repo_name: ${{ github.event.repository.name }}
@@ -16,7 +27,7 @@ jobs:
     secrets:
       DOCKERHUB_USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}
       DOCKERHUB_PASSWORD: ${{ secrets.DOCKERHUB_PASSWORD }}
-  
+
   post-upload:
     needs: test-image
     if: needs.test-image.outputs.retag-success == 'success'
@@ -24,6 +35,8 @@ jobs:
     with:
       repo_name: ${{ github.event.repository.name }}
       runner: ubuntu-latest
+      # The release job below creates every release, including v1.0.0
+      manage_release: false
     secrets:
       AIRTABLE_API_KEY: ${{ secrets.AIRTABLE_API_KEY }}
       AWS_ACCESS_KEY: ${{ secrets.AWS_ACCESS_KEY }}
@@ -31,15 +44,40 @@ jobs:
       DOCKERHUB_USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}
       DOCKERHUB_PASSWORD: ${{ secrets.DOCKERHUB_PASSWORD }}
 
-  # Only for a new model: post-upload creates and tags v1.0.0 itself (always v1.0.0),
-  # and releases created with GITHUB_TOKEN do not trigger retag-release-docker.
+  # ---- MINOR, MAJOR and the first release: only after the image tests passed
+  # (amd64 required) and the bot has pushed its metadata and README commits.
+  release:
+    needs: [resolve, post-upload]
+    if: needs.post-upload.result == 'success' && needs.resolve.outputs.release == 'true'
+    uses: ersilia-os/ersilia-model-workflows/.github/workflows/release-model.yml@main
+    with:
+      repo_name: ${{ github.event.repository.name }}
+      bump: ${{ needs.resolve.outputs.bump }}
+      sha: ${{ github.event.workflow_run.head_sha }}
+      pr: ${{ needs.resolve.outputs.pr }}
+
+  retag:
+    needs: release
+    if: needs.release.outputs.created == 'true'
+    uses: ersilia-os/ersilia-model-workflows/.github/workflows/retag-release-docker.yml@main
+    with:
+      repo_name: ${{ github.event.repository.name }}
+      release_tag: ${{ needs.release.outputs.tag }}
+      ref: main
+      runner: ubuntu-latest
+    secrets:
+      DOCKERHUB_USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}
+      DOCKERHUB_PASSWORD: ${{ secrets.DOCKERHUB_PASSWORD }}
+      AIRTABLE_API_KEY: ${{ secrets.AIRTABLE_API_KEY }}
+      AWS_ACCESS_KEY: ${{ secrets.AWS_ACCESS_KEY }}
+      AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+
   build-sif:
-    needs: post-upload
-    if: needs.post-upload.outputs.created-release == 'true'
+    needs: [release, retag]
     uses: ersilia-os/ersilia-model-workflows/.github/workflows/build-upload-sif.yml@main
     with:
       repo_name: ${{ github.event.repository.name }}
-      version: v1.0.0
+      version: ${{ needs.release.outputs.tag }}
       runner: ubuntu-latest
     secrets:
       AWS_ACCESS_KEY: ${{ secrets.AWS_ACCESS_KEY }}
