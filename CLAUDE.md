@@ -63,14 +63,16 @@ Full rule: [Checkpoints and storage](https://ersilia.gitbook.io/ersilia-book/ers
 
 ## Versioning
 
-Models follow [semantic versioning](https://semver.org/) (`vMAJOR.MINOR.PATCH`) via GitHub releases — the `retag-release-docker.yml` workflow propagates the tag to the published Docker image. The rules and the pre-release checklist are in [Model releases](https://ersilia.gitbook.io/ersilia-book/ersilia-model-hub/model-contribution/example-of-the-model-incorporation-workflow#model-releases) in the Ersilia Book; in short:
+Models follow [semantic versioning](https://semver.org/) (`vMAJOR.MINOR.PATCH`) via GitHub releases. Every pull request to `main` carries exactly one version label — `semver:major`, `semver:minor`, `semver:patch` or `no-release` — and after the merge the workflows release the model from it, so nobody creates a release by hand. The `retag-release-docker.yml` workflow propagates the tag to the published Docker image. A new model always takes `semver:major` and is released as `v1.0.0`. The rules are in [Model versioning](https://ersilia.gitbook.io/ersilia-book/ersilia-model-hub/model-contribution/model-versioning) in the Ersilia Book; in short:
 
-- **MAJOR** — checkpoints change; output columns added, removed, renamed, reordered or retyped; inputs that returned a value now return empty; values for valid inputs change beyond 1e-4 (whatever the cause); for generators, a new sampling method, model or selection criteria.
-- **MINOR** — code, dependency or image changes with the same columns and outputs within 1e-4: dependency updates and the rebuilds they need, speed-ups, smaller images, a GPU option (GPU outputs may differ slightly; report the difference), fixes where failing inputs now return a result, the same weights in another file format, moving checkpoints into `model/checkpoints/`.
-- **PATCH** — no change to code, dependencies, checkpoints or outputs: metadata, README, `run_columns.csv` descriptions or direction, a rebuilt image of unchanged code.
-- **No release** — a pure storage move between Git LFS, Git and eosvc, or removing a duplicate copy, with identical files (check every sha256), code and outputs; wait for the PR test, then merge with `[skip ci]`.
+- **MAJOR** (`semver:major`) — checkpoints change; output columns added, removed, renamed, reordered or retyped; inputs that returned a value now return empty; values for valid inputs change beyond 1e-4 (whatever the cause); for generators, a new sampling method, model or selection criteria.
+- **MINOR** (`semver:minor`) — code, dependency or image changes with the same columns and outputs within 1e-4: dependency updates and the rebuilds they need, speed-ups, smaller images, a GPU option (GPU outputs may differ slightly; report the difference), fixes where failing inputs now return a result, the same weights in another file format, moving checkpoints into `model/checkpoints/`. Moving checkpoints between Git and eosvc is also MINOR, even with identical files: check every sha256 and say so in the pull request.
+- **PATCH** (`semver:patch`) — no change to code, dependencies, checkpoints or outputs: metadata, README, `run_columns.csv` descriptions or direction.
+- **No release** (`no-release`) — only `.github/`, `.gitignore`, `.gitattributes`, `CLAUDE.md` or `AGENTS.md` change.
 
-Never change version without asking the user.
+The **Check version label** check fails if the label is missing, if there is more than one, or if it is lower than the minimum it detects from the changes. Never put a CI-skip token such as `[skip ci]` in a commit message of a pull request: the checks would not run.
+
+Never choose the version label without asking the user.
 
 ## GitHub Actions workflows
 
